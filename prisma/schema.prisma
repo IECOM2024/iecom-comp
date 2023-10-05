@@ -2,7 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
+    previewFeatures = ["jsonProtocol", "metrics", "tracing", "extendedWhereUnique"]
+    binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -12,6 +14,11 @@ datasource db {
     // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
     // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
     url      = env("DATABASE_URL")
+}
+
+enum Uploaded {
+    YES
+    NO
 }
 
 enum UserRole {
@@ -63,13 +70,19 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     hashPassword  String?
-    imageUrl      String?
+    image         String?
 
     role UserRole @default(PARTICIPANT)
 
-    accounts        Account[]
-    sessions        Session[]
-    ParticipantData ParticipantData[]
+    accounts                        Account[]
+    sessions                        Session[]
+    ParticipantData                 ParticipantData[]
+    ExamMultipleChoiceAnswer        ExamMultipleChoiceAnswer[]
+    ExamShortAnswerAnswer           ExamShortAnswerAnswer[]
+    ExamEssayAnswer                 ExamEssayAnswer[]
+    ExamAttendance                  ExamAttendance[]
+    EventTicket                     EventTicket[]
+    MainCompetitionRegistrationData MainCompetitionRegistrationData[]
 }
 
 model VerificationToken {
@@ -91,5 +104,216 @@ model ParticipantData {
     zip         String?
     isSubmitted Boolean @default(false)
 
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Competition Registration Models
+enum CompetitionRegistrationStatus {
+    UNREGISTERED
+    FORM_FILLING
+    SUBMITTED_UNCONFIRMED
+    SUBMITTED_CONFIRMED
+}
+
+model MainCompetitionParticipantData {
+    id String @id @default(cuid())
+
+    firstName  String?
+    lastName   String?
+    email      String?
+    phoneNumber String?
+    isAccepted Boolean @default(false)
+}
+
+model MainCompetitionRegistrationData {
+    id String @id @default(cuid())
+
+    userId String
+
+    status CompetitionRegistrationStatus @default(UNREGISTERED)
+
+    universityName    String?
+    universityCountry String?
+
+    isAccepted Boolean @default(false)
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Event Models
+
+enum EventTicketStatus {
+    UNATTENDED
+    REGISTERED
+    PAID_UNCONFIRMED
+    PAID_CONFIRMED
+}
+
+enum EventStatus {
+    PUBLISHED
+    UNPUBLISHED
+}
+
+model Event {
+    id String @id @default(cuid())
+
+    name        String
+    description String
+    startTime   DateTime
+    endTime     DateTime
+    location    String
+    status      EventStatus @default(UNPUBLISHED)
+
+    EventTicket EventTicket[]
+}
+
+model EventTicket {
+    id String @id @default(cuid())
+
+    userId  String
+    eventId String
+
+    status EventTicketStatus @default(UNATTENDED)
+
+    participantName        String
+    participantEmail       String
+    participantInstitution String
+    participantPhoneNumber String
+
+    paymentDocument Uploaded @default(NO)
+
+    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+    event Event @relation(fields: [eventId], references: [id])
+}
+
+// Competition-Prelimination Exam Models
+enum QuestionType {
+    MULTIPLE_CHOICE
+    SHORT_ANSWER
+    ESSAY
+}
+
+enum MCAnswerType {
+    A
+    B
+    C
+    D
+    E
+}
+
+model Exam {
+    id String @id @default(cuid())
+
+    name        String
+    description String
+    startTime   DateTime
+    endTime     DateTime
+    duration    Int
+    isPublished Boolean  @default(false)
+
+    multipleChoiceQuestions  ExamMultipleChoice[]
+    shortAnswerQuestions     ExamShortAnswer[]
+    essayQuestions           ExamEssay[]
+    ExamMultipleChoiceAnswer ExamMultipleChoiceAnswer[]
+    ExamShortAnswerAnswer    ExamShortAnswerAnswer[]
+    ExamEssayAnswer          ExamEssayAnswer[]
+    ExamAttendance           ExamAttendance[]
+}
+
+model ExamMultipleChoice {
+    id String @id @default(cuid())
+
+    examId        String
+    question      String
+    answerA       String
+    answerB       String
+    answerC       String?
+    answerD       String?
+    answerE       String?
+    correctAnswer MCAnswerType
+
+    exam                     Exam                       @relation(fields: [examId], references: [id], onDelete: Cascade)
+    ExamMultipleChoiceAnswer ExamMultipleChoiceAnswer[]
+}
+
+model ExamShortAnswer {
+    id String @id @default(cuid())
+
+    examId        String
+    question      String
+    correctAnswer String
+
+    exam                  Exam                    @relation(fields: [examId], references: [id], onDelete: Cascade)
+    ExamShortAnswerAnswer ExamShortAnswerAnswer[]
+}
+
+model ExamEssay {
+    id String @id @default(cuid())
+
+    examId   String
+    question String
+
+    exam            Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
+    ExamEssayAnswer ExamEssayAnswer[]
+}
+
+model ExamMultipleChoiceAnswer {
+    id String @id @default(cuid())
+
+    examId               String
+    userId               String
+    examMultipleChoiceId String
+
+    answer MCAnswerType?
+
+    exam               Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+    user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+    examMultipleChoice ExamMultipleChoice @relation(fields: [examMultipleChoiceId], references: [id], onDelete: Cascade)
+}
+
+model ExamShortAnswerAnswer {
+    id String @id @default(cuid())
+
+    examId            String
+    userId            String
+    examShortAnswerId String
+
+    answer String?
+
+    exam            Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+    user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+    examShortAnswer ExamShortAnswer @relation(fields: [examShortAnswerId], references: [id], onDelete: Cascade)
+}
+
+model ExamEssayAnswer {
+    id String @id @default(cuid())
+
+    examId      String
+    userId      String
+    examEssayId String
+
+    answer String?
+
+    exam      Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    examEssay ExamEssay @relation(fields: [examEssayId], references: [id], onDelete: Cascade)
+}
+
+enum ExamAttendanceStatus {
+    ABSENT
+    TAKEN
+    FINISHED
+}
+
+model ExamAttendance {
+    id String @id @default(cuid())
+
+    examId String
+    userId String
+
+    status            ExamAttendanceStatus @default(ABSENT)
+    durationRemaining Int                  @default(0)
+
+    exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
