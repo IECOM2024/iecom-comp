@@ -10,7 +10,7 @@ import { prisma } from "~/server/db";
 import bcrypt from "bcrypt";
 import { TRPCError } from "@trpc/server";
 import moment from "moment";
-import { ProblemType } from "@prisma/client";
+import { FlagStatus, ProblemType } from "@prisma/client";
 
 export const prelimSiteRouter = createTRPCRouter({
   participant: createTRPCRouter({
@@ -59,6 +59,67 @@ export const prelimSiteRouter = createTRPCRouter({
 
         return returnedExamInfo;
       }),
+
+    setFlag: participantProcedure.input(z.object({
+      examId: z.string(),
+      answerDataId: z.string(),
+      flagStatus: z.enum([FlagStatus.ANSWERED, FlagStatus.FLAGGED, FlagStatus.UNANSWERED]),
+    })).mutation(async ({ ctx, input }) => {
+      const examInfo = await ctx.prisma.prelimInfo.findFirstOrThrow({
+        where: {
+          examId: input.examId,
+        },
+      });
+
+      if (moment().isBefore(examInfo.startTime))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Exam has not started.",
+        });
+      if (moment().isAfter(examInfo.endTime))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Exam has ended.",
+        });
+
+      const prelimAttendance =
+        await ctx.prisma.prelimAttendance.findFirstOrThrow({
+          where: {
+            prelimInfoId: examInfo.id,
+          },
+        });
+
+      if (prelimAttendance.durationRemaining === 0)
+        throw new TRPCError({ code: "FORBIDDEN", message: "Time is out." });
+
+      const answerData = await ctx.prisma.answerData.findFirst({
+        where: {
+          id: input.answerDataId,
+        },
+      });
+
+      if (answerData) {
+        const updatedAnswerData = await ctx.prisma.answerData.update({
+          where: {
+            id: answerData.id,
+          },
+          data: {
+            flagStatus: input.flagStatus,
+          },
+        });
+
+        return updatedAnswerData;
+      }
+
+      const createdAnswerData = await ctx.prisma.answerData.create({
+        data: {
+          flagStatus: input.flagStatus,
+          prelimAttendanceId: prelimAttendance.id,
+        },
+      });
+
+      return createdAnswerData;
+    }),
 
     getPrelimQue: participantProcedure
       .input(
