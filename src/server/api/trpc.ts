@@ -125,7 +125,7 @@ const isParticipant = t.middleware(({ ctx, next}) => {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
-  if (ctx.session?.user?.role !== UserRole.PARTICIPANT) {
+  if (ctx.session?.user?.role !== UserRole.PRELIM_PARTICIPANT) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 

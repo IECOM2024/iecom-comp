@@ -28,6 +28,8 @@
     "axios": "^1.4.0",
     "bcrypt": "^5.1.1",
     "framer-motion": "^10.12.18",
+    "moment": "^2.29.4",
+    "momentjs": "^2.0.0",
     "next": "^13.4.2",
     "next-auth": "^4.22.4",
     "react": "18.2.0",
