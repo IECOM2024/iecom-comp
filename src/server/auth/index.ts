@@ -30,7 +30,6 @@ declare module "next-auth" {
   }
 
   interface User extends DefaultUser {
-    // ...other properties
     role: UserRole;
   }
 }
@@ -121,10 +120,6 @@ export const authOptions: NextAuthOptions = {
           });
         return user;
       },
-    }),
-    GoogleProvider({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
   ],
   pages: {
