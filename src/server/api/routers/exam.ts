@@ -32,7 +32,7 @@ export const ExamRouter = createTRPCRouter({
 
         if (exam.type == ExamType.PRELIMARY) {
           const prelimInfo = await ctx.prisma.prelimInfo.findFirstOrThrow({
-            where: { id: exam.id },
+            where: { examId: exam.id },
           });
 
           let prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
