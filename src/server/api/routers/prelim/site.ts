@@ -25,6 +25,9 @@ export const prelimSiteRouter = createTRPCRouter({
           where: {
             examId: input.examId,
           },
+          include: {
+            ProblemData: true,
+          }
         });
 
         if (moment().isBefore(examInfo.startTime))
