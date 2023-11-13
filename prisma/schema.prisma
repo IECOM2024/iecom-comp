@@ -12,7 +12,7 @@ datasource db {
     // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
     // Further reading:
     // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#String
     url      = env("DATABASE_URL")
 }
 
@@ -75,13 +75,16 @@ model User {
 
     role UserRole @default(PARTICIPANT)
 
-    accounts                        Account[]
-    sessions                        Session[]
-    ParticipantData                 ParticipantData[]
-    PrelimAttendance                PrelimAttendance[]
-    EventTicket                     EventTicket[]
-    MainCompetitionRegistrationData MainCompetitionRegistrationData[]
-    ExamEnrollment                  ExamEnrollment[]
+    accounts                         Account[]
+    sessions                         Session[]
+    ParticipantData                  ParticipantData[]
+    PrelimAttendance                 PrelimAttendance[]
+    EventTicket                      EventTicket[]
+    MainCompetitionRegistrationData  MainCompetitionRegistrationData[]
+    ExamEnrollment                   ExamEnrollment[]
+    ColorRunParticipantData          ColorRunParticipantData[]
+    EssayCompetitionRegistrationData EssayCompetitionRegistrationData[]
+    EssaySubmission                  EssaySubmission[]
 }
 
 model VerificationToken {
@@ -114,16 +117,6 @@ enum CompetitionRegistrationStatus {
     SUBMITTED_CONFIRMED
 }
 
-model MainCompetitionParticipantData {
-    id String @id @default(cuid())
-
-    firstName   String?
-    lastName    String?
-    email       String?
-    phoneNumber String?
-    isAccepted  Boolean @default(false)
-}
-
 model MainCompetitionRegistrationData {
     id String @id @default(cuid())
 
@@ -131,12 +124,80 @@ model MainCompetitionRegistrationData {
 
     status CompetitionRegistrationStatus @default(UNREGISTERED)
 
-    universityName    String?
-    universityCountry String?
+    teamName                                  String?
+    leaderName                                String?
+    leaderInstitution                         String?
+    leaderMajor                               String?
+    leaderBatch                               String?
+    leaderEmail                               String?
+    leaderPhoneNumber                         String?
+    member1Name                               String?
+    member1Institution                        String?
+    member1Major                              String?
+    member1Batch                              String?
+    member1Email                              String?
+    member1PhoneNumber                        String?
+    member2Name                               String?
+    member2Institution                        String?
+    member2Major                              String?
+    member2Batch                              String?
+    member2Email                              String?
+    member2PhoneNumber                        String?
+    member3Name                               String?
+    whereDidYouKnowThisCompetitionInformation String?
+    leaderPostLink                            String?
+    member1PostLink                           String?
+    member2PostLink                           String?
+    leaderTwibbonLink                         String?
+    member1TwibbonLink                        String?
+    member2TwibbonLink                        String?
 
-    isAccepted Boolean @default(false)
+    messageFromAdmin      String?
+    fileUploadLink        String?
+    lastSubmissionTime    DateTime?
+    isFilePaymentUploaded Boolean   @default(false)
 
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EssayCompetitionRegistrationData {
+    id String @id @default(cuid())
+
+    userId String
+
+    status CompetitionRegistrationStatus @default(UNREGISTERED)
+
+    name                                      String?
+    institution                               String?
+    major                                     String?
+    batch                                     String?
+    email                                     String?
+    phoneNumber                               String?
+    whereDidYouKnowThisCompetitionInformation String?
+    postLink                                  String?
+    twibbonLink                               String?
+
+    messageFromAdmin      String?
+    fileUploadLink        String?
+    lastSubmissionTime    DateTime?
+    isFilePaymentUploaded Boolean   @default(false)
+
+    user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    EssaySubmission EssaySubmission[]
+}
+
+model EssaySubmission {
+    id String @id @default(cuid())
+
+    userId                             String
+    essayCompetitionRegistrationDataId String
+
+    messageFromAdmin    String?
+    essaySubmissionLink String?
+    lastSubmissionTime  DateTime?
+
+    user                             User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+    essayCompetitionRegistrationData EssayCompetitionRegistrationData @relation(fields: [essayCompetitionRegistrationDataId], references: [id], onDelete: Cascade)
 }
 
 // Event Models
@@ -153,6 +214,11 @@ enum EventStatus {
     UNPUBLISHED
 }
 
+enum EventType {
+    COLOR_RUN
+    SEMINAR
+}
+
 model Event {
     id String @id @default(cuid())
 
@@ -162,6 +228,7 @@ model Event {
     endTime     DateTime
     location    String
     status      EventStatus @default(UNPUBLISHED)
+    eventType   EventType   @default(COLOR_RUN)
 
     EventTicket EventTicket[]
 }
@@ -179,11 +246,62 @@ model EventTicket {
     participantInstitution String
     participantPhoneNumber String
 
-    paymentDocument Uploaded @default(NO)
+    paymentDocument Uploaded? @default(NO)
 
     user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
     event Event @relation(fields: [eventId], references: [id])
 }
+
+enum RegistrationStatus {
+    UNREGISTERED
+    FORM_FILLING
+    SUBMITTED_UNCONFIRMED
+    SUBMITTED_CONFIRMED
+}
+
+enum RegisFor {
+    INDIVIDUAL
+    BUNDLE
+}
+
+enum ParticipantType {
+    ITB_STUDENT
+    PUBLIC
+    MTI_MEMBER
+    MTI_ALUMNI
+}
+
+// Color Run Models
+
+model ColorRunParticipantData {
+    id String @id @default(cuid())
+
+    name                         String?
+    email                        String?
+    phoneNumber                  String?
+    address                      String?
+    institution                  String?
+    bloodType                    String?
+    healthHistory                String?
+    emergencyContactNumber       String?
+    emergencyContactName         String?
+    emergencyContactRelationship String?
+
+    // For payment
+    type      ParticipantType @default(ITB_STUDENT)
+    registFor RegisFor        @default(INDIVIDUAL)
+    paidby    String?
+
+    status RegistrationStatus @default(UNREGISTERED)
+
+    isFilePaymemtUploaded Boolean @default(false)
+    messageFromAdmin      String?
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+}
+
+// Feedback Telemetry
 
 // Competition Exam Models
 enum ExamType {
@@ -252,6 +370,7 @@ model PrelimAttendance {
 
     status            ExamAttendanceStatus @default(ABSENT)
     durationRemaining Int                  @default(0)
+    dueDate           DateTime
     currentNumber     Int                  @default(0)
 
     user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -333,7 +452,7 @@ model ExamMultipleChoiceAnswer {
 
     examId String
 
-    answer     String
+    answer String
 
     answerData           AnswerData?        @relation(fields: [answerDataId], references: [id])
     answerDataId         String?
@@ -347,7 +466,7 @@ model ExamShortAnswerAnswer {
     examId String
     userId String
 
-    answer     String?
+    answer String?
 
     answerData        AnswerData?     @relation(fields: [answerDataId], references: [id])
     answerDataId      String?

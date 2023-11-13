@@ -1,4 +1,9 @@
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Box,
   Button,
   Divider,
@@ -11,10 +16,12 @@ import {
   useDisclosure,
   useMediaQuery,
 } from "@chakra-ui/react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { MdArrowDropDown, MdReorder } from "react-icons/md";
 import { useEffect, useState } from "react";
+import { useHoverMenu } from "~/utils/hooks/useHoverMenu";
+import { SignOutBtn } from "./SignOutBtn";
 
 interface NavbarProps {
   type?: "signin" | "signup";
@@ -30,7 +37,7 @@ export const Navbar = ({ type }: NavbarProps) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY/200);
+      setScrollY(window.scrollY / 200);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -43,17 +50,16 @@ export const Navbar = ({ type }: NavbarProps) => {
   return (
     <Flex
       justifyContent="space-between"
-      px="2em"
+      px={{ base: "0.5em", md: "2em" }}
       py="2em"
       alignItems="center"
       fontFamily="heading"
       position="fixed"
       top="0"
       zIndex="1000"
-      h="4em"
+      h={{ base: "5em", md: "4em" }}
       w="100%"
-      bg={`white`}
-      borderBottom="1px solid black"
+      bg={isMobile ? "white" : "rgba(255, 255, 255, 0.7)"}
     >
       <Flex
         onClick={() => router.push("/")}
@@ -62,9 +68,18 @@ export const Navbar = ({ type }: NavbarProps) => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <Image src="main-icon.webp" alt="" w="3.5em" ml="5.5em"/>
+        <Image
+          src="/main-icon.webp"
+          alt=""
+          w="3.5em"
+          ml={{ base: "0.5em", md: "5.5em" }}
+        />
       </Flex>
-      <Flex w="min(35em,60%)" justifyContent="space-around" alignItems="center">
+      <Flex
+        w="min(35em,60%)"
+        justifyContent={{ base: "right", md: "space-around" }}
+        alignItems="center"
+      >
         {!isMobile ? (
           <ButtonGroupDesktop session={session} router={router} type={type} />
         ) : (
@@ -82,22 +97,27 @@ interface ButtonGroupProps {
 }
 
 const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
+  const eventHoverMenu = useHoverMenu();
+  const compeHoverMenu = useHoverMenu();
+
   return (
     <>
-      <Menu>
+      <Menu isOpen={eventHoverMenu.isOpen}>
         <MenuButton
           as={Button}
           variant="no-border"
           color="blue"
           fontWeight="bold"
+          {...eventHoverMenu.mouseProps}
         >
           EVENT
         </MenuButton>
         <MenuList
-          border="1px solid black"
-          borderRadius="10px"
+          bg="white"
           flexDir="column"
           display="flex"
+          mt="0.5em"
+          {...eventHoverMenu.menuListProps}
         >
           <Button
             variant="no-border"
@@ -117,20 +137,21 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
           </Button>
         </MenuList>
       </Menu>
-      <Menu>
+      <Menu isOpen={compeHoverMenu.isOpen}>
         <MenuButton
           as={Button}
           variant="no-border"
           color="blue"
           fontWeight="bold"
+          {...compeHoverMenu.mouseProps}
         >
           COMPETITION
         </MenuButton>
         <MenuList
-          border="1px solid black"
-          borderRadius="10px"
           flexDir="column"
           display="flex"
+          mt="0.5em"
+          {...compeHoverMenu.menuListProps}
         >
           <Button
             variant="no-border"
@@ -142,11 +163,11 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
           </Button>
           <Button
             variant="no-border"
-            onClick={() => router.push("/main-competition")}
+            onClick={() => router.push("/case-competition")}
             color="blue"
             fontWeight="bold"
           >
-            IE Competition
+            Case Competition
           </Button>
         </MenuList>
       </Menu>
@@ -164,31 +185,39 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
               px="0.7em"
               py="0.5em"
             >
-              {session.user.role === "ADMIN" ? (
-                <Button
-                  variant="no-border"
-                  onClick={() => router.push("/event-administration")}
-                >
-                  Manage Event
-                </Button>
-              ) : (
-                <Button
-                  variant="no-border"
-                  onClick={() => router.push("/event-registration")}
-                >
-                  Register Event
-                </Button>
+              {session.user.role === "ADMIN" && (
+                <>
+                  <Button
+                    variant="no-border"
+                    onClick={() => router.push("/admin/color-run")}
+                  >
+                    Color Run Admin
+                  </Button>
+                  <Button
+                    variant="no-border"
+                    onClick={() => router.push("/admin/essay-competition")}
+                  >
+                    Essay Competition Admin
+                  </Button><Button
+                    variant="no-border"
+                    onClick={() => router.push("/admin/case-competition")}
+                  >
+                    Case Competition Admin
+                  </Button>
+                  <Box bg="black" w="80%" m="auto" h="1px" my="1em" />
+                </>
               )}
-              <Box bg="black" w="80%" m="auto" h="1px" my="1em" />
+
               <Button onClick={() => router.push("/profile")}>Profile</Button>
-              <Button onClick={() => router.push("/api/auth/signout")} mt="1em">
-                Sign Out
-              </Button>
+              <SignOutBtn />
             </Flex>
           </MenuList>
         </Menu>
       ) : type !== "signin" ? (
-        <Button onClick={() => signIn()}> Sign In </Button>
+        <Button onClick={() => signIn(undefined, { callbackUrl: "/" })}>
+          {" "}
+          Sign In{" "}
+        </Button>
       ) : (
         <Box />
       )}
@@ -197,9 +226,6 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
 };
 
 const ButtonGroupMobile = ({ session, router, type }: ButtonGroupProps) => {
-  const eventDisclosure = useDisclosure();
-  const competitionDisclosure = useDisclosure();
-
   return (
     <>
       <Menu>
@@ -209,61 +235,67 @@ const ButtonGroupMobile = ({ session, router, type }: ButtonGroupProps) => {
           display="flex"
           justifyContent="right"
         >
-          <MdReorder size="1.5em" />
+          <MdReorder size="2.5em" />
         </MenuButton>
         <MenuList display="flex" flexDir="column" w="100vw">
-          <Button variant="no-border" onClick={eventDisclosure.onToggle}>
-            Event
-            <MdArrowDropDown size="1.5em" />
-          </Button>
-          {eventDisclosure.isOpen && (
-            <>
-              <Button
-                variant="no-border"
-                onClick={() => router.push("/pre-event")}
-              >
-                Pre-Event
-              </Button>
-              <Button
-                variant="no-border"
-                onClick={() => router.push("/student-summit")}
-              >
-                Student Summit
-              </Button>
-            </>
-          )}
-          <Button variant="no-border" onClick={competitionDisclosure.onToggle}>
-            Competition
-            <MdArrowDropDown size="1.5em" />
-          </Button>
-          {competitionDisclosure.isOpen && (
-            <>
-              <Button
-                variant="no-border"
-                onClick={() => router.push("/essay-competition")}
-              >
-                Essay Competition
-              </Button>
-              <Button
-                variant="no-border"
-                onClick={() => router.push("/main-competition")}
-              >
-                IE Competition
-              </Button>
-            </>
-          )}
+          <Accordion allowToggle>
+            <AccordionItem>
+              <AccordionButton>
+                <Text>Event</Text>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel>
+                <Flex flexDir="column">
+                  <Button
+                    variant="no-border"
+                    onClick={() => router.push("/pre-event")}
+                  >
+                    Pre-Event
+                  </Button>
+                  <Button
+                    variant="no-border"
+                    onClick={() => router.push("/student-summit")}
+                  >
+                    Student Summit
+                  </Button>
+                </Flex>
+              </AccordionPanel>
+            </AccordionItem>
+            <AccordionItem>
+              <AccordionButton>
+                <Text>Competition</Text>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel>
+                <Flex flexDir="column">
+                  <Button
+                    variant="no-border"
+                    onClick={() => router.push("/essay-competition")}
+                  >
+                    Essay Competition
+                  </Button>
+                  <Button
+                    variant="no-border"
+                    onClick={() => router.push("/case-competition")}
+                  >
+                    Case Competition
+                  </Button>
+                </Flex>
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
 
           <Box h="1px" w="90%" m="auto" my="1em" bg="black" />
 
           {!!session ? (
             <>
               <Button onClick={() => router.push("/profile")}>Profile</Button>
-              <Button onClick={() => router.push("/api/auth/signout")} mt="1em">
-                Sign Out
-              </Button>
+              <SignOutBtn />
             </>
           ) : (
-            <Button onClick={() => router.push("/signin")}>Sign In</Button>
+            <Button onClick={() => signIn(undefined, { callbackUrl: "/" })}>
+              Sign In
+            </Button>
           )}
         </MenuList>
       </Menu>

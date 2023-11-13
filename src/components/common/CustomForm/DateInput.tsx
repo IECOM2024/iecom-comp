@@ -1,6 +1,6 @@
 import { type ChakraProps, Input } from '@chakra-ui/react';
 
-interface DateInputProps extends ChakraProps {
+export interface DateInputProps extends ChakraProps {
   dateState: Date | undefined;
   setDateState: React.Dispatch<React.SetStateAction<Date | undefined>>;
 }

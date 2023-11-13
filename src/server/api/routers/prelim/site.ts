@@ -10,7 +10,11 @@ import { prisma } from "~/server/db";
 import bcrypt from "bcrypt";
 import { TRPCError } from "@trpc/server";
 import moment from "moment";
-import { FlagStatus, ProblemType } from "@prisma/client";
+import { ExamAttendanceStatus, FlagStatus, ProblemType } from "@prisma/client";
+import {
+  calculateDueDate,
+  calculateDuration,
+} from "../../functions/calculate-duration";
 
 export const prelimSiteRouter = createTRPCRouter({
   participant: createTRPCRouter({
@@ -27,7 +31,98 @@ export const prelimSiteRouter = createTRPCRouter({
           },
           include: {
             ProblemData: true,
-          }
+          },
+        });
+
+        if (moment().isBefore(examInfo.startTime))
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Exam has not started.",
+          });
+        if (moment().isAfter(examInfo.endTime))
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Exam has ended.",
+          });
+
+        const prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
+          where: {
+            prelimInfoId: examInfo.id,
+          },
+          include: {
+            answerData: true,
+          },
+        });
+
+        // Case first time to take exam
+        if (!prelimAttendance) {
+          const enrollmentInfo = await ctx.prisma.examEnrollment.findFirst({
+            where: {
+              examId: examInfo.examId,
+              userId: ctx.session?.user.id,
+            },
+          });
+
+          if (!enrollmentInfo)
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "You are not enrolled on this exam.",
+            });
+
+          const createdPrelimAttendance =
+            await ctx.prisma.prelimAttendance.create({
+              data: {
+                prelimInfoId: examInfo.id,
+                userId: ctx.session?.user.id,
+                durationRemaining: examInfo.duration,
+                status: ExamAttendanceStatus.TAKEN,
+                dueDate: calculateDueDate(examInfo.duration),
+              },
+            });
+
+          const returnedExamInfo = {
+            ...examInfo,
+            durationRemaining: examInfo.duration,
+            answerData: [],
+          };
+
+          return returnedExamInfo;
+        }
+
+        const durationRemaining =
+          prelimAttendance.status === ExamAttendanceStatus.TAKEN
+            ? calculateDuration(prelimAttendance.dueDate)
+            : prelimAttendance.durationRemaining;
+
+        if (durationRemaining === 0)
+          throw new TRPCError({ code: "FORBIDDEN", message: "Time is out." });
+
+        const returnedExamInfo = {
+          ...examInfo,
+          durationRemaining: durationRemaining,
+          answerData: prelimAttendance.answerData,
+        };
+
+        return returnedExamInfo;
+      }),
+
+    setFlag: participantProcedure
+      .input(
+        z.object({
+          examId: z.string(),
+          answerDataId: z.string(),
+          flagStatus: z.enum([
+            FlagStatus.ANSWERED,
+            FlagStatus.FLAGGED,
+            FlagStatus.UNANSWERED,
+          ]),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const examInfo = await ctx.prisma.prelimInfo.findFirstOrThrow({
+          where: {
+            examId: input.examId,
+          },
         });
 
         if (moment().isBefore(examInfo.startTime))
@@ -46,83 +141,39 @@ export const prelimSiteRouter = createTRPCRouter({
             where: {
               prelimInfoId: examInfo.id,
             },
-            include: {
-              answerData: true,
-            },
           });
 
         if (prelimAttendance.durationRemaining === 0)
           throw new TRPCError({ code: "FORBIDDEN", message: "Time is out." });
 
-        const returnedExamInfo = {
-          ...examInfo,
-          durationRemaining: prelimAttendance.durationRemaining,
-          answerData: prelimAttendance.answerData,
-        };
-
-        return returnedExamInfo;
-      }),
-
-    setFlag: participantProcedure.input(z.object({
-      examId: z.string(),
-      answerDataId: z.string(),
-      flagStatus: z.enum([FlagStatus.ANSWERED, FlagStatus.FLAGGED, FlagStatus.UNANSWERED]),
-    })).mutation(async ({ ctx, input }) => {
-      const examInfo = await ctx.prisma.prelimInfo.findFirstOrThrow({
-        where: {
-          examId: input.examId,
-        },
-      });
-
-      if (moment().isBefore(examInfo.startTime))
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Exam has not started.",
-        });
-      if (moment().isAfter(examInfo.endTime))
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Exam has ended.",
-        });
-
-      const prelimAttendance =
-        await ctx.prisma.prelimAttendance.findFirstOrThrow({
+        const answerData = await ctx.prisma.answerData.findFirst({
           where: {
-            prelimInfoId: examInfo.id,
+            id: input.answerDataId,
           },
         });
 
-      if (prelimAttendance.durationRemaining === 0)
-        throw new TRPCError({ code: "FORBIDDEN", message: "Time is out." });
+        if (answerData) {
+          const updatedAnswerData = await ctx.prisma.answerData.update({
+            where: {
+              id: answerData.id,
+            },
+            data: {
+              flagStatus: input.flagStatus,
+            },
+          });
 
-      const answerData = await ctx.prisma.answerData.findFirst({
-        where: {
-          id: input.answerDataId,
-        },
-      });
+          return updatedAnswerData;
+        }
 
-      if (answerData) {
-        const updatedAnswerData = await ctx.prisma.answerData.update({
-          where: {
-            id: answerData.id,
-          },
+        const createdAnswerData = await ctx.prisma.answerData.create({
           data: {
             flagStatus: input.flagStatus,
+            prelimAttendanceId: prelimAttendance.id,
           },
         });
 
-        return updatedAnswerData;
-      }
-
-      const createdAnswerData = await ctx.prisma.answerData.create({
-        data: {
-          flagStatus: input.flagStatus,
-          prelimAttendanceId: prelimAttendance.id,
-        },
-      });
-
-      return createdAnswerData;
-    }),
+        return createdAnswerData;
+      }),
 
     getPrelimQue: participantProcedure
       .input(
@@ -154,15 +205,17 @@ export const prelimSiteRouter = createTRPCRouter({
             where: {
               prelimInfoId: examInfo.id,
             },
-            select: {
-              durationRemaining: true,
-            },
           });
 
-        if (prelimAttendance.durationRemaining === 0)
+        const durationRemaining =
+          prelimAttendance.status === ExamAttendanceStatus.TAKEN
+            ? calculateDuration(prelimAttendance.dueDate)
+            : prelimAttendance.durationRemaining;
+
+        if (durationRemaining === 0)
           throw new TRPCError({ code: "FORBIDDEN", message: "Time is out." });
 
-        const problemData = await ctx.prisma.problemData.findFirstOrThrow({
+        const problemData = await ctx.prisma.problemData.findFirst({
           where: {
             prelimInfoId: examInfo.id,
             pNumber: input.questionNumber,
@@ -173,24 +226,62 @@ export const prelimSiteRouter = createTRPCRouter({
           },
         });
 
-        const examContent =
+        if (!problemData)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Question not found, please contact support.",
+          });
+
+        let answerData = await ctx.prisma.answerData.findFirst({
+          where: {
+            prelimAttendanceId: prelimAttendance.id,
+            problemDataId: problemData.id,
+          },
+        });
+
+        if (!answerData) {
+          const createdAnswerData = await ctx.prisma.answerData.create({
+            data: {
+              prelimAttendanceId: prelimAttendance.id,
+              problemDataId: problemData.id,
+              flagStatus: FlagStatus.UNANSWERED,
+            },
+          });
+
+          answerData = createdAnswerData;
+        }
+
+        const problemContent =
           problemData.problemType === ProblemType.MC
             ? problemData.ExamMultipleChoice[0]
             : problemData.ExamShortAnswer[0];
 
-        if (!examContent)
+        if (!problemContent)
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Question not found.",
           });
 
         const prelimQue = {
-          content: examContent,
+          content: problemContent,
+          answerData: answerData,
           type: problemData.problemType,
           pNumber: input.questionNumber,
         };
 
-        return prelimQue;
+        return prelimQue as
+          | {
+              content: (typeof problemData.ExamMultipleChoice)[0];
+              type: "MC";
+              pNumber: number;
+              answerData: typeof answerData;
+            }
+          | {
+              content: (typeof problemData.ExamShortAnswer)[0];
+              type: "SA";
+              pNumber: number;
+              answerData: typeof answerData;
+            };
       }),
 
     submitPrelimAnswer: participantProcedure
@@ -199,6 +290,11 @@ export const prelimSiteRouter = createTRPCRouter({
           examId: z.string(),
           questionNumber: z.number(),
           answer: z.string(),
+          flagStatus: z.enum([
+            FlagStatus.ANSWERED,
+            FlagStatus.FLAGGED,
+            FlagStatus.UNANSWERED,
+          ]).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -270,6 +366,7 @@ export const prelimSiteRouter = createTRPCRouter({
             },
             data: {
               answer: input.answer,
+              flagStatus: input.flagStatus
             },
           });
 
@@ -280,6 +377,7 @@ export const prelimSiteRouter = createTRPCRouter({
               prelimAttendanceId: prelimAttendance.id,
               problemDataId: problemData.id,
               answer: input.answer,
+              flagStatus: input.flagStatus ?? FlagStatus.ANSWERED,
             },
           });
 

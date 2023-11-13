@@ -105,6 +105,7 @@ export const authOptions: NextAuthOptions = {
             code: "BAD_REQUEST",
             message: "No user found",
           });
+          console.log(user)
         if (!user.hashPassword)
           throw new TRPCError({
             code: "BAD_REQUEST",

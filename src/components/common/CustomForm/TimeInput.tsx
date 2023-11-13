@@ -1,6 +1,6 @@
 import { ChakraProps, Input } from '@chakra-ui/react';
 
-interface DateInputProps extends ChakraProps {
+export interface TimeInputProps extends ChakraProps {
   timeState: [number, number];
   setTimeState: React.Dispatch<React.SetStateAction<[number, number]>>;
 }
@@ -9,7 +9,7 @@ export const TimeInput = ({
   timeState,
   setTimeState,
   ...rest
-}: DateInputProps) => {
+}: TimeInputProps) => {
   const getTimeFormat = (timeState: [number, number]) => {
     const hour = timeState[0];
     const minute = timeState[1];

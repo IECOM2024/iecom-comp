@@ -7,8 +7,8 @@ import { Textarea } from './component/textarea';
 
 const theme = extendTheme({
   fonts: {
-    heading: 'Bodwars',
-    body: 'SomarRounded-Regular'
+    heading: 'Alsans',
+    body: 'ebgar'
   },
   colors,
   styles: {
