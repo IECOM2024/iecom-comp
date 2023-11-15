@@ -10,6 +10,7 @@ import {
   ExamType,
   PrelimAttendance,
 } from "@prisma/client";
+import { calculateDueDate } from "../functions/calculate-duration";
 
 export const ExamRouter = createTRPCRouter({
   participant: createTRPCRouter({
@@ -57,6 +58,9 @@ export const ExamRouter = createTRPCRouter({
               data: {
                 prelimInfoId: prelimInfo.id,
                 userId: session.user.id,
+                dueDate: calculateDueDate(exam.duration),
+                durationRemaining: exam.duration,
+                status: ExamAttendanceStatus.ABSENT,
               },
             });
           }
