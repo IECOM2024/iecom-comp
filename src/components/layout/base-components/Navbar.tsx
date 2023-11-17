@@ -105,8 +105,6 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
                 
                 </>
               )}
-
-              <Button onClick={() => router.push("/profile")}>Profile</Button>
               <SignOutBtn />
             </Flex>
           </MenuList>

@@ -12,6 +12,7 @@ import {
   Stack,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { FlagStatus } from "@prisma/client";
@@ -19,13 +20,17 @@ import { api } from "~/utils/api";
 import { useRouter } from "next/router";
 import moment from "moment";
 import { MdFlag } from "react-icons/md";
-import { Loading } from "../common/Loading";
+import { Loading } from "../../common/Loading";
+import { BtnSubmitConsent } from "./SubmitConsentBtn";
 
 interface PrelimExamProps {
   examId: string;
 }
 
 export const PrelimExam = ({ examId }: PrelimExamProps) => {
+  const toast = useToast();
+  const router = useRouter();
+
   const [pNumber, setPNumber] = useState(1);
   const [currentQ, setCurrentQ] = useState(1);
   const [answer, setAnswer] = useState("" as string);
@@ -35,6 +40,8 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
   const prelimInfoQuery = api.prelim.site.participant.getPrelimInfo.useQuery({
     examId: examId,
   });
+  const prelimSubmitExamMutation =
+    api.exam.participant.updateStatusSubmitExam.useMutation();
 
   const prelimInfo = prelimInfoQuery.data;
   const allAnswerData = prelimInfo?.answerData;
@@ -69,6 +76,7 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
 
   useEffect(() => {
     if (prelimInfo?.durationRemaining) {
+      setRemainingTime(prelimInfo.durationRemaining);
       const interval = setInterval(() => {
         setRemainingTime((prev) => prev - 1000);
       }, 1000);
@@ -80,15 +88,31 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
     if (problemData?.answerData?.answer) {
       setAnswer(problemData.answerData.answer);
     }
-  }, [problemData?.answerData?.answer, answer]);
+  }, [problemData?.answerData?.answer]);
+
+  useEffect(() => {
+    if (remainingTime <= 0) {
+      submitExam();
+    }
+  });
 
   if (!prelimInfo) {
-    return (
-      <Flex fontSize="xl" padding="4.5rem" h="100%">
-        Loading...
-      </Flex>
-    );
+    return <Loading />;
   }
+
+  const submitExam = () => {
+    prelimSubmitExamMutation.mutateAsync({ examId: examId }).then(() => {
+      toast({
+        title: "Exam Submitted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 3000);
+    });
+  };
 
   const { answerData } = problemData ?? {};
 
@@ -170,11 +194,15 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
       });
   };
 
+  const isAnsweredAll = mergedProblemAnswerData.every(
+    (problem) => problem.answerData?.answer
+  );
+
   return (
     <Flex height="100%">
       <Box width="70vw" height="100%" bgColor="cream">
         {problemDataQuery.isLoading ? (
-          <Loading/>
+          <Loading />
         ) : problemData ? (
           <Flex
             direction="column"
@@ -331,6 +359,7 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
             ))}
           </Grid>
         </VStack>
+        <BtnSubmitConsent isRequiredAll={isAnsweredAll} onSubmit={submitExam}/>
         <VStack
           spacing={6}
           bgColor="#FBEDD199"

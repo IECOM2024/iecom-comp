@@ -18,14 +18,17 @@ export const ExamGate = ({ examId }: ExamGateProps) => {
   const examInfo = examInfoQuery.data;
 
   const confirmConsent = () => {
-    updateExamConfirmConsentMutation.mutateAsync({ examId }).then(() => {
-      toast({
-        title: "Exam Started",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
+    updateExamConfirmConsentMutation
+      .mutateAsync({ examId })
+      .then(() => examInfoQuery.refetch())
+      .then(() => {
+        toast({
+          title: "Exam Started",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       });
-    });
   };
 
   if (examInfo?.attendance.status === ExamAttendanceStatus.ABSENT) {

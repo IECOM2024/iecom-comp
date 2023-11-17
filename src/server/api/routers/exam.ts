@@ -10,7 +10,11 @@ import {
   ExamType,
   PrelimAttendance,
 } from "@prisma/client";
-import { calculateDueDate } from "../functions/calculate-duration";
+import {
+  calculateDueDate,
+  calculateDueDateFromNow,
+} from "../functions/reusable-logic/calculate-duration";
+import { prelimParticipantGetAttendance } from "../functions/reusable-logic/prelim-participant-get-attendance";
 
 export const ExamRouter = createTRPCRouter({
   participant: createTRPCRouter({
@@ -32,57 +36,7 @@ export const ExamRouter = createTRPCRouter({
         if (!exam) throw new TRPCError({ code: "NOT_FOUND" });
 
         if (exam.type == ExamType.PRELIMARY) {
-          const prelimInfo = await ctx.prisma.prelimInfo.findFirst({
-            where: { examId: exam.id },
-          });
-
-          if (!prelimInfo) throw new TRPCError({ code: "NOT_FOUND", message: "Wrong link" });
-
-          let prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
-            where: {
-              prelimInfoId: prelimInfo.id,
-              userId: session.user.id,
-            },
-          });
-
-          // Check for enrollment, if no enrollment available, throw 401
-          if (!prelimAttendance) {
-            const examEnrollment = await ctx.prisma.examEnrollment.findFirst({
-              where: {
-                examId: exam.id,
-                userId: session.user.id,
-              },
-            });
-
-            if (!examEnrollment) throw new TRPCError({ code: "FORBIDDEN" });
-
-            prelimAttendance = await ctx.prisma.prelimAttendance.create({
-              data: {
-                prelimInfoId: prelimInfo.id,
-                userId: session.user.id,
-                dueDate: calculateDueDate(exam.duration),
-                durationRemaining: exam.duration,
-                status: ExamAttendanceStatus.ABSENT,
-              },
-            });
-          }
-
-          if (!prelimAttendance) throw new TRPCError({ code: "FORBIDDEN" });
-
-          const examInfo = {
-            id: exam.id,
-            name: exam.name,
-            description: exam.description,
-            startTime: exam.startTime,
-            endTime: exam.endTime,
-            duration: exam.duration,
-            type: exam.type,
-            attendance: {
-              status: prelimAttendance.status,
-              durationRemaining: prelimAttendance.durationRemaining,
-              currentNumber: prelimAttendance.currentNumber,
-            },
-          };
+          const examInfo = await prelimParticipantGetAttendance(ctx, exam);
 
           return examInfo;
         }
@@ -145,77 +99,167 @@ export const ExamRouter = createTRPCRouter({
 
       return examList;
     }),
-    updateStatusConfirmConsent: participantProcedure.input(z.object({
-      examId: z.string()})
-    ).mutation(async ({ ctx, input }) => {
-      const session = ctx.session;
+    updateStatusConfirmConsent: participantProcedure
+      .input(
+        z.object({
+          examId: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const session = ctx.session;
 
-      if (!session) throw new TRPCError({ code: "UNAUTHORIZED" });
+        if (!session) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      const exam = await ctx.prisma.exam.findUnique({
-        where: { id: input.examId },
-      });
-
-      if (!exam) throw new TRPCError({ code: "NOT_FOUND" });
-
-      if (exam.type == ExamType.PRELIMARY) {
-        const prelimInfo = await ctx.prisma.prelimInfo.findFirst({
-          where: { examId: exam.id },
+        const exam = await ctx.prisma.exam.findUnique({
+          where: { id: input.examId },
         });
 
-        if (!prelimInfo) throw new TRPCError({ code: "NOT_FOUND" });
+        if (!exam) throw new TRPCError({ code: "NOT_FOUND" });
 
-        let prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
-          where: {
-            prelimInfoId: prelimInfo.id,
-            userId: session.user.id,
-          },
-        });
-
-        // Check for enrollment, if no enrollment available, throw 401
-        if (!prelimAttendance) {
-          const examEnrollment = await ctx.prisma.examEnrollment.findFirst({
-            where: {
-              examId: exam.id,
-              userId: session.user.id,
-            },
+        if (exam.type == ExamType.PRELIMARY) {
+          const prelimInfo = await ctx.prisma.prelimInfo.findFirst({
+            where: { examId: exam.id },
           });
 
-          if (!examEnrollment) throw new TRPCError({ code: "FORBIDDEN" });
+          if (!prelimInfo) throw new TRPCError({ code: "NOT_FOUND" });
 
-          prelimAttendance = await ctx.prisma.prelimAttendance.create({
-            data: {
+          let prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
+            where: {
               prelimInfoId: prelimInfo.id,
               userId: session.user.id,
-              dueDate: calculateDueDate(exam.duration),
-              durationRemaining: exam.duration,
-              status: ExamAttendanceStatus.TAKEN,
             },
           });
 
-          return prelimAttendance;
-        }
+          // Check for enrollment, if no enrollment available, throw 401
+          if (!prelimAttendance) {
+            const examEnrollment = await ctx.prisma.examEnrollment.findFirst({
+              where: {
+                examId: exam.id,
+                userId: session.user.id,
+              },
+            });
 
-        if (prelimAttendance.status === ExamAttendanceStatus.FINISHED) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "User already finished the exam" });
-        }
+            if (!examEnrollment) throw new TRPCError({ code: "FORBIDDEN" });
 
-        if (prelimAttendance.status === ExamAttendanceStatus.TAKEN || prelimAttendance.status === ExamAttendanceStatus.PAUSED) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "User already taken exam" });
-        }
+            prelimAttendance = await ctx.prisma.prelimAttendance.create({
+              data: {
+                prelimInfoId: prelimInfo.id,
+                userId: session.user.id,
+                dueDate: calculateDueDateFromNow(exam.duration),
+                durationRemaining: exam.duration,
+                status: ExamAttendanceStatus.TAKEN,
+              },
+            });
 
-        const updatedprelimAttendance = await ctx.prisma.prelimAttendance.update({
-          where: { id: prelimAttendance.id },
-          data: {
-            status: ExamAttendanceStatus.TAKEN,
-          },
+            return prelimAttendance;
+          }
+
+          if (prelimAttendance.status === ExamAttendanceStatus.FINISHED) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "User already finished the exam",
+            });
+          }
+
+          if (
+            prelimAttendance.status === ExamAttendanceStatus.TAKEN ||
+            prelimAttendance.status === ExamAttendanceStatus.PAUSED
+          ) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "User already taken exam",
+            });
+          }
+
+          const updatedprelimAttendance =
+            await ctx.prisma.prelimAttendance.update({
+              where: { id: prelimAttendance.id },
+              data: {
+                status: ExamAttendanceStatus.TAKEN,
+              },
+            });
+
+          return updatedprelimAttendance;
+        } else {
+          return null;
+        }
+      }),
+
+    updateStatusSubmitExam: participantProcedure
+      .input(
+        z.object({
+          examId: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const session = ctx.session;
+
+        if (!session) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+        const exam = await ctx.prisma.exam.findUnique({
+          where: { id: input.examId },
         });
 
-        return updatedprelimAttendance;
-      } else {
-        return null
-      }
-    }),
+        if (!exam) throw new TRPCError({ code: "NOT_FOUND" });
+
+        if (exam.type == ExamType.PRELIMARY) {
+          const prelimInfo = await ctx.prisma.prelimInfo.findFirst({
+            where: { examId: exam.id },
+          });
+
+          if (!prelimInfo) throw new TRPCError({ code: "NOT_FOUND" });
+
+          let prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
+            where: {
+              prelimInfoId: prelimInfo.id,
+              userId: session.user.id,
+            },
+          });
+
+          // Check for enrollment, if no enrollment available, throw 401
+          if (!prelimAttendance) {
+            const examEnrollment = await ctx.prisma.examEnrollment.findFirst({
+              where: {
+                examId: exam.id,
+                userId: session.user.id,
+              },
+            });
+
+            if (!examEnrollment) throw new TRPCError({ code: "FORBIDDEN" });
+
+            prelimAttendance = await ctx.prisma.prelimAttendance.create({
+              data: {
+                prelimInfoId: prelimInfo.id,
+                userId: session.user.id,
+                dueDate: calculateDueDateFromNow(exam.duration),
+                durationRemaining: exam.duration,
+                status: ExamAttendanceStatus.TAKEN,
+              },
+            });
+
+            return prelimAttendance;
+          }
+
+          if (prelimAttendance.status === ExamAttendanceStatus.FINISHED) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "User already finished the exam",
+            });
+          }
+
+          const updatedprelimAttendance =
+            await ctx.prisma.prelimAttendance.update({
+              where: { id: prelimAttendance.id },
+              data: {
+                status: ExamAttendanceStatus.FINISHED,
+              },
+            });
+
+          return updatedprelimAttendance;
+        } else {
+          return null;
+        }
+      }),
   }),
   admin: createTRPCRouter({
     getAllExam: adminProcedure.query(async ({ ctx }) => {

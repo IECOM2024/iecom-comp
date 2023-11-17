@@ -7,8 +7,15 @@ export const calculateDuration = (dueDate: Date) => {
     return durationRemaining
 }
 
-export const calculateDueDate = (duration: number) => {
+export const calculateDueDateFromNow = (duration: number) => {
     const now = moment()
     const dueDate = now.add(duration, "ms")
+    console.log(dueDate.toDate().toLocaleDateString())
+    console.log(now.toDate())
+    console.log(duration)
+    return dueDate.toDate()
+}
+export const calculateDueDate = (duration: number, startDate: Date) => {
+    const dueDate = moment(startDate).add(duration, "ms")
     return dueDate.toDate()
 }

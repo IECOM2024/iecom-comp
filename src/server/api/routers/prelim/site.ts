@@ -13,8 +13,9 @@ import moment from "moment";
 import { ExamAttendanceStatus, FlagStatus, ProblemType } from "@prisma/client";
 import {
   calculateDueDate,
+  calculateDueDateFromNow,
   calculateDuration,
-} from "../../functions/calculate-duration";
+} from "../../functions/reusable-logic/calculate-duration";
 
 export const prelimSiteRouter = createTRPCRouter({
   participant: createTRPCRouter({
@@ -31,6 +32,7 @@ export const prelimSiteRouter = createTRPCRouter({
           },
           include: {
             ProblemData: true,
+            exam: true,
           },
         });
 
@@ -44,6 +46,8 @@ export const prelimSiteRouter = createTRPCRouter({
             code: "FORBIDDEN",
             message: "Exam has ended.",
           });
+
+        const { exam } = examInfo;
 
         const prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
           where: {
@@ -74,15 +78,15 @@ export const prelimSiteRouter = createTRPCRouter({
               data: {
                 prelimInfoId: examInfo.id,
                 userId: ctx.session?.user.id,
-                durationRemaining: examInfo.duration,
+                durationRemaining: exam.duration,
                 status: ExamAttendanceStatus.TAKEN,
-                dueDate: calculateDueDate(examInfo.duration),
+                dueDate: calculateDueDateFromNow(exam.duration),
               },
             });
 
           const returnedExamInfo = {
             ...examInfo,
-            durationRemaining: examInfo.duration,
+            durationRemaining: exam.duration,
             answerData: [],
           };
 
@@ -290,11 +294,13 @@ export const prelimSiteRouter = createTRPCRouter({
           examId: z.string(),
           questionNumber: z.number(),
           answer: z.string(),
-          flagStatus: z.enum([
-            FlagStatus.ANSWERED,
-            FlagStatus.FLAGGED,
-            FlagStatus.UNANSWERED,
-          ]).optional(),
+          flagStatus: z
+            .enum([
+              FlagStatus.ANSWERED,
+              FlagStatus.FLAGGED,
+              FlagStatus.UNANSWERED,
+            ])
+            .optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -366,7 +372,7 @@ export const prelimSiteRouter = createTRPCRouter({
             },
             data: {
               answer: input.answer,
-              flagStatus: input.flagStatus
+              flagStatus: input.flagStatus,
             },
           });
 

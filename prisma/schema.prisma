@@ -354,7 +354,6 @@ model PrelimInfo {
     description   String
     startTime     DateTime
     endTime       DateTime
-    duration      Int
     noOfQuestions Int
     isPublished   Boolean  @default(false)
 
