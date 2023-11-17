@@ -19,12 +19,13 @@ import { api } from "~/utils/api";
 import { useRouter } from "next/router";
 import moment from "moment";
 import { MdFlag } from "react-icons/md";
+import { Loading } from "../common/Loading";
 
-interface ExamQuestionsProps {
+interface PrelimExamProps {
   examId: string;
 }
 
-export const ExamQuestions = ({ examId }: ExamQuestionsProps) => {
+export const PrelimExam = ({ examId }: PrelimExamProps) => {
   const [pNumber, setPNumber] = useState(1);
   const [currentQ, setCurrentQ] = useState(1);
   const [answer, setAnswer] = useState("" as string);
@@ -74,6 +75,12 @@ export const ExamQuestions = ({ examId }: ExamQuestionsProps) => {
       return () => clearInterval(interval);
     }
   }, [prelimInfo?.durationRemaining]);
+
+  useEffect(() => {
+    if (problemData?.answerData?.answer) {
+      setAnswer(problemData.answerData.answer);
+    }
+  }, [problemData?.answerData?.answer, answer]);
 
   if (!prelimInfo) {
     return (
@@ -167,7 +174,7 @@ export const ExamQuestions = ({ examId }: ExamQuestionsProps) => {
     <Flex height="100%">
       <Box width="70vw" height="100%" bgColor="cream">
         {problemDataQuery.isLoading ? (
-          <Flex>Loading...</Flex>
+          <Loading/>
         ) : problemData ? (
           <Flex
             direction="column"

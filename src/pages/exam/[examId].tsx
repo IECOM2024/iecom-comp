@@ -20,15 +20,14 @@ import { useEffect, useState } from "react";
 import { AuthorizedRoleLayout } from "~/components/layout/AuthorizedRoleLayout";
 import { FlagStatus } from "@prisma/client";
 import moment from "moment";
-import { ExamQuestions } from "~/components/exam/ExamQuestions";
+import { ExamGate } from "~/components/exam/ExamGate";
 
 const ExamPageComponent = () => {
   const router = useRouter();
-  const examId = typeof router.query.examId === "string" ? router.query.examId : router.query.examId?.[0];
-
-  if (!examId) {
-    return <></>
-  }
+  const examId =
+    typeof router.query.examId === "string"
+      ? router.query.examId
+      : router.query.examId?.[0];
 
   return (
     <Box height="100vh" overflow="hidden">
@@ -37,7 +36,7 @@ const ExamPageComponent = () => {
           IECOM - Preliminary
         </Heading>
       </Flex>
-      <ExamQuestions examId={examId}/>
+      {examId ? <ExamGate examId={examId}/> : "Loading..."}
     </Box>
   );
 };
@@ -49,4 +48,3 @@ export default function ExamPageById() {
     </AuthorizedRoleLayout>
   );
 }
-

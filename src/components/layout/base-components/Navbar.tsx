@@ -61,23 +61,10 @@ export const Navbar = ({ type }: NavbarProps) => {
       w="100%"
       bg={isMobile ? "white" : "rgba(255, 255, 255, 0.7)"}
     >
-      <Flex
-        onClick={() => router.push("/")}
-        cursor="pointer"
-        w="10em"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <Image
-          src="/main-icon.webp"
-          alt=""
-          w="3.5em"
-          ml={{ base: "0.5em", md: "5.5em" }}
-        />
-      </Flex>
+      
       <Flex
         w="min(35em,60%)"
-        justifyContent={{ base: "right", md: "space-around" }}
+        justifyContent={{ base: "right" }}
         alignItems="center"
       >
         {!isMobile ? (
@@ -97,80 +84,8 @@ interface ButtonGroupProps {
 }
 
 const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
-  const eventHoverMenu = useHoverMenu();
-  const compeHoverMenu = useHoverMenu();
-
   return (
     <>
-      <Menu isOpen={eventHoverMenu.isOpen}>
-        <MenuButton
-          as={Button}
-          variant="no-border"
-          color="blue"
-          fontWeight="bold"
-          {...eventHoverMenu.mouseProps}
-        >
-          EVENT
-        </MenuButton>
-        <MenuList
-          bg="white"
-          flexDir="column"
-          display="flex"
-          mt="0.5em"
-          {...eventHoverMenu.menuListProps}
-        >
-          <Button
-            variant="no-border"
-            onClick={() => router.push("/pre-event")}
-            color="blue"
-            fontWeight="bold"
-          >
-            Pre-Event
-          </Button>
-          <Button
-            variant="no-border"
-            onClick={() => router.push("/student-summit")}
-            color="blue"
-            fontWeight="bold"
-          >
-            Student Summit
-          </Button>
-        </MenuList>
-      </Menu>
-      <Menu isOpen={compeHoverMenu.isOpen}>
-        <MenuButton
-          as={Button}
-          variant="no-border"
-          color="blue"
-          fontWeight="bold"
-          {...compeHoverMenu.mouseProps}
-        >
-          COMPETITION
-        </MenuButton>
-        <MenuList
-          flexDir="column"
-          display="flex"
-          mt="0.5em"
-          {...compeHoverMenu.menuListProps}
-        >
-          <Button
-            variant="no-border"
-            onClick={() => router.push("/essay-competition")}
-            color="blue"
-            fontWeight="bold"
-          >
-            Essay Competition
-          </Button>
-          <Button
-            variant="no-border"
-            onClick={() => router.push("/case-competition")}
-            color="blue"
-            fontWeight="bold"
-          >
-            Case Competition
-          </Button>
-        </MenuList>
-      </Menu>
       {!!session ? (
         <Menu>
           <MenuButton>
@@ -187,24 +102,7 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
             >
               {session.user.role === "ADMIN" && (
                 <>
-                  <Button
-                    variant="no-border"
-                    onClick={() => router.push("/admin/color-run")}
-                  >
-                    Color Run Admin
-                  </Button>
-                  <Button
-                    variant="no-border"
-                    onClick={() => router.push("/admin/essay-competition")}
-                  >
-                    Essay Competition Admin
-                  </Button><Button
-                    variant="no-border"
-                    onClick={() => router.push("/admin/case-competition")}
-                  >
-                    Case Competition Admin
-                  </Button>
-                  <Box bg="black" w="80%" m="auto" h="1px" my="1em" />
+                
                 </>
               )}
 
@@ -238,52 +136,7 @@ const ButtonGroupMobile = ({ session, router, type }: ButtonGroupProps) => {
           <MdReorder size="2.5em" />
         </MenuButton>
         <MenuList display="flex" flexDir="column" w="100vw">
-          <Accordion allowToggle>
-            <AccordionItem>
-              <AccordionButton>
-                <Text>Event</Text>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                <Flex flexDir="column">
-                  <Button
-                    variant="no-border"
-                    onClick={() => router.push("/pre-event")}
-                  >
-                    Pre-Event
-                  </Button>
-                  <Button
-                    variant="no-border"
-                    onClick={() => router.push("/student-summit")}
-                  >
-                    Student Summit
-                  </Button>
-                </Flex>
-              </AccordionPanel>
-            </AccordionItem>
-            <AccordionItem>
-              <AccordionButton>
-                <Text>Competition</Text>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                <Flex flexDir="column">
-                  <Button
-                    variant="no-border"
-                    onClick={() => router.push("/essay-competition")}
-                  >
-                    Essay Competition
-                  </Button>
-                  <Button
-                    variant="no-border"
-                    onClick={() => router.push("/case-competition")}
-                  >
-                    Case Competition
-                  </Button>
-                </Flex>
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
+          
 
           <Box h="1px" w="90%" m="auto" my="1em" bg="black" />
 

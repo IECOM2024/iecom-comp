@@ -23,7 +23,7 @@ export function BaseLayout({ children, type, title, isNoFooter }: LayoutProps) {
       <Head>
         <title>{title ?? "IECOM 2024"}</title>
       </Head>
-      <Flex flexDir="column" bgImage="/texture.webp" bgSize="100vw auto">
+      <Flex flexDir="column" bg="cream" bgSize="100vw auto" minH="100vh">
         
         <Navbar type={type} />
         <Box pos="relative" zIndex="1" mt="4em">

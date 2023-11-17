@@ -9,29 +9,30 @@ import { api } from "~/utils/api";
 import { useRouter } from "next/router";
 import { AuthorizedRoleLayout } from "~/components/layout/AuthorizedRoleLayout";
 import { Text } from "@chakra-ui/react";
+import { useEffect } from "react";
 
 export const getServerSideProps = withSession({ force: true });
 
 export default function Home() {
-  const hello = "Hello"
+  const hello = "Hello";
 
-  const router = useRouter()
-  const {data: session} = useSession()
+  const router = useRouter();
+  const { data: session } = useSession();
 
-  if (session?.user.role === UserRole.PRELIM_PARTICIPANT) {
-    router.replace("/dashboard")
-  }
+  useEffect(() => {
+    if (session?.user.role === UserRole.PRELIM_PARTICIPANT) {
+      router.replace("/dashboard");
+    }
 
-  if (session?.user.role === UserRole.ADMIN) {
-    router.replace("/admin")
-  }
+    if (session?.user.role === UserRole.ADMIN) {
+      router.replace("/admin");
+    }
+  }, [session, router]);
 
   return (
     <>
       <AuthorizedRoleLayout>
-        <Text>
-          Loading...
-        </Text>
+        <Text>Loading...</Text>
       </AuthorizedRoleLayout>
     </>
   );
