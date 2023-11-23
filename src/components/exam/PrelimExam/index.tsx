@@ -22,6 +22,7 @@ import moment from "moment";
 import { MdFlag } from "react-icons/md";
 import { Loading } from "../../common/Loading";
 import { BtnSubmitConsent } from "./SubmitConsentBtn";
+import ReactHtmlParser from 'react-html-parser';
 
 interface PrelimExamProps {
   examId: string;
@@ -92,7 +93,7 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
 
   useEffect(() => {
     if (remainingTime <= 0) {
-      submitExam();
+      
     }
   });
 
@@ -219,7 +220,7 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
               <Text fontWeight="semibold" mb="2rem">
                 Question {currentQ}
               </Text>
-              <Text>{problemData.content.question}</Text>
+              <Text className="prelim-question-wrapper">{ReactHtmlParser(problemData.content.question)}</Text>
             </VStack>
             {problemData.type === "MC" ? (
               <VStack
@@ -300,10 +301,14 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
       <Flex
         direction="column"
         position="relative"
-        width="30vw"
-        height="calc(100vh - 9rem)"
+        height="100%"
         justifyContent="space-between"
         alignItems="center"
+        bgImage="/comp-dark.png"
+          width="100%"
+          h="100%"
+          bgRepeat="repeat-y"
+          w="30vw"
       >
         <VStack paddingBlock="2rem" spacing={8}>
           <Box padding=".5rem 1rem" borderRadius="1rem" bgColor="#FBEDD199">
@@ -373,13 +378,8 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
             {intToTime(remainingTime) ?? "--:--"}
           </Heading>
         </VStack>
-        <Image
-          src="/comp-dark.png"
-          alt=""
-          width="100%"
-          position="absolute"
-          left="0"
-          zIndex="-1"
+        <Box
+          
         />
       </Flex>
     </Flex>

@@ -267,5 +267,110 @@ export const ExamRouter = createTRPCRouter({
 
       return examList;
     }),
+
+    getAllAttendanceByExamId: adminProcedure
+      .input(
+        z.object({
+          examId: z.string(),
+          currentPage: z.number(),
+          rowPerPage: z.number(),
+          orderBy: z.string(),
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        const exam = await ctx.prisma.exam.findUnique({
+          where: { id: input.examId },
+        });
+
+        if (!exam) throw new TRPCError({ code: "NOT_FOUND" });
+
+        if (exam.type == ExamType.PRELIMARY) {
+          const prelimInfo = await ctx.prisma.prelimInfo.findFirst({
+            where: { examId: exam.id },
+          });
+
+          if (!prelimInfo) throw new TRPCError({ code: "NOT_FOUND" });
+
+          const prelimAttendanceList =
+            await ctx.prisma.prelimAttendance.findMany({
+              where: { prelimInfoId: prelimInfo.id },
+              include: {
+                user: {
+                  include: {
+                    MainCompetitionRegistrationData: true,
+                  },
+                },
+              },
+              skip: (input.currentPage - 1) * input.rowPerPage,
+              take: input.rowPerPage,
+            });
+
+          const prelimAttendanceListCount =
+            await ctx.prisma.prelimAttendance.count({
+              where: { prelimInfoId: prelimInfo.id },
+            });
+
+          return {
+            data: prelimAttendanceList,
+            metadata: { totalCount: prelimAttendanceListCount },
+          };
+        } else {
+          return {
+            data: [],
+            metadata: { totalCount: 0 },
+          }
+        }
+      }),
+
+    updateAttendanceById: adminProcedure
+      .input(
+        z.object({
+          prelimAttendanceId: z.string(),
+          status: z.enum([
+            ExamAttendanceStatus.ABSENT,
+            ExamAttendanceStatus.TAKEN,
+            ExamAttendanceStatus.PAUSED,
+            ExamAttendanceStatus.FINISHED,
+          ]),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const prelimAttendance = await ctx.prisma.prelimAttendance.findUnique({
+          where: { id: input.prelimAttendanceId },
+        });
+
+        if (!prelimAttendance) throw new TRPCError({ code: "NOT_FOUND" });
+
+        const updatedPrelimAttendance =
+          await ctx.prisma.prelimAttendance.update({
+            where: { id: input.prelimAttendanceId },
+            data: {
+              status: input.status,
+            },
+          });
+
+        return updatedPrelimAttendance;
+      }),
+
+    deleteAttendanceById: adminProcedure
+      .input(
+        z.object({
+          prelimAttendanceId: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const prelimAttendance = await ctx.prisma.prelimAttendance.findUnique({
+          where: { id: input.prelimAttendanceId },
+        });
+
+        if (!prelimAttendance) throw new TRPCError({ code: "NOT_FOUND", message: "User attendance not found" });
+
+        const deletedPrelimAttendance =
+          await ctx.prisma.prelimAttendance.delete({
+            where: { id: input.prelimAttendanceId },
+          });
+
+        return deletedPrelimAttendance;
+      }),
   }),
 });

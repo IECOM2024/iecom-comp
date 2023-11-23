@@ -124,3 +124,25 @@ a {
   border: 1px solid slategrey;
   border-radius: 12px;
 }
+
+.prelim-question-wrapper p {
+  font-family: Heading;
+  font-size: 1em;
+  font-weight: 500;
+  text-align: justify;
+  width: 100%;
+}
+
+.prelim-question-wrapper {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  gap: 1.2rem
+}
+
+.prelim-question-wrapper img {
+  width: 50%;
+  height: auto;
+}

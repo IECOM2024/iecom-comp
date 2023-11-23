@@ -7,11 +7,12 @@ export const AuthorizedRoleLayout = ({
   children,
   type,
   session,
-  isNoFooter
+  isNoFooter,
+  title
 }: ProtectedLayoutProps) => {
   return (
     <CheckAuth>
-      <BaseLayout type={type} isNoFooter={isNoFooter}>{children}</BaseLayout>
+      <BaseLayout type={type} isNoFooter={isNoFooter} title={title}>{children}</BaseLayout>
     </CheckAuth>
   );
 };

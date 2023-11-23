@@ -4,7 +4,6 @@ import { type Session } from "next-auth";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import Head from "next/head";
-import { Footer } from "./Footer";
 
 export interface LayoutProps {
   children: React.ReactNode;
@@ -25,7 +24,7 @@ export function BaseLayout({ children, type, title, isNoFooter }: LayoutProps) {
       </Head>
       <Flex flexDir="column" bg="cream" bgSize="100vw auto" minH="100vh">
         
-        <Navbar type={type} />
+        <Navbar type={type} title={title} />
         <Box pos="relative" zIndex="1" mt="4em">
           {children}
         </Box>

@@ -151,13 +151,16 @@ model MainCompetitionRegistrationData {
     leaderTwibbonLink                         String?
     member1TwibbonLink                        String?
     member2TwibbonLink                        String?
+    isUsingReferral                           Boolean @default(false)
 
     messageFromAdmin      String?
     fileUploadLink        String?
     lastSubmissionTime    DateTime?
     isFilePaymentUploaded Boolean   @default(false)
 
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    Referral   Referral? @relation(fields: [referralId], references: [id])
+    referralId String?
 }
 
 model EssayCompetitionRegistrationData {
@@ -478,4 +481,14 @@ enum ExamAttendanceStatus {
     TAKEN
     PAUSED
     FINISHED
+}
+
+// Competititon referal 
+model Referral {
+    id String @id @default(cuid())
+
+    refferalName                    String
+    maxUsed                         Int
+    currentUsed                     Int
+    MainCompetitionRegistrationData MainCompetitionRegistrationData[]
 }

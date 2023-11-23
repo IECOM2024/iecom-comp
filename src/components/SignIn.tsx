@@ -61,8 +61,9 @@ export const SignIn = ({ csrfToken }: SignInProps) => {
           borderRadius="10px"
           p="1em"
           w="min(30em,95%)"
+          mt="1em"
         >
-          <Text textAlign="center">Sign In</Text>
+          <Text textAlign="center" fontSize="3xl" color="blue" fontWeight="bold">Sign In</Text>
           <form onSubmit={onSignIn}>
             <FormControl>
               <Input
@@ -85,32 +86,11 @@ export const SignIn = ({ csrfToken }: SignInProps) => {
 
               <Flex w="100%" flexDir="column" mt="1em">
                 <Button type="submit" w="50%" m="auto">
-                  Sign In with Email
-                </Button>
-                <Button m="auto" mt="1em" w="50%" onClick={googleSignIn}>
-                  Sign In with Google
-                </Button>
-              </Flex>
-
-              <Flex pos="relative" p="10" alignItems="center">
-                <Divider color="black" />
-                <AbsoluteCenter
-                  bg="white"
-                  fontSize="xl"
-                  w="2em"
-                  textAlign="center"
-                >
-                  or
-                </AbsoluteCenter>
-              </Flex>
-              <Flex w="100%">
-                <Button onClick={() => router.push("/signup")} w="50%" m="auto">
-                  Sign Up
+                  Sign In
                 </Button>
               </Flex>
             </FormControl>
           </form>
-          {session ? <Text>Logged in as {session.user.email}</Text> : <Text>Not logged in</Text>}
         </Flex>
       </Flex>
   );

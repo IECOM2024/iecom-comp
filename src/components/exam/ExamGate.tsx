@@ -4,12 +4,14 @@ import { api } from "~/utils/api";
 import { PrelimExam } from "./PrelimExam";
 import { Loading } from "../common/Loading";
 import moment from "moment";
+import { useEffect } from "react";
 
 interface ExamGateProps {
   examId: string;
+  setTitle: (title: string) => void;
 }
 
-export const ExamGate = ({ examId }: ExamGateProps) => {
+export const ExamGate = ({ examId, setTitle }: ExamGateProps) => {
   const toast = useToast();
 
   const examInfoQuery = api.exam.participant.getExamInfo.useQuery({ examId });
@@ -30,6 +32,12 @@ export const ExamGate = ({ examId }: ExamGateProps) => {
         });
       });
   };
+
+  useEffect(() => {
+    if (examInfo) {
+      setTitle(examInfo.name);
+    }
+  }, [examInfo, setTitle]);
 
   if (examInfo?.attendance.status === ExamAttendanceStatus.ABSENT) {
     return (

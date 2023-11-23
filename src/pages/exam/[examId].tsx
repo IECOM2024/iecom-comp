@@ -22,7 +22,9 @@ import { FlagStatus } from "@prisma/client";
 import moment from "moment";
 import { ExamGate } from "~/components/exam/ExamGate";
 
-const ExamPageComponent = () => {
+const ExamPageComponent = ({setTitle} : {
+  setTitle: (title: string) => void
+}) => {
   const router = useRouter();
   const examId =
     typeof router.query.examId === "string"
@@ -30,21 +32,19 @@ const ExamPageComponent = () => {
       : router.query.examId?.[0];
 
   return (
-    <Box height="100vh" overflow="hidden">
-      <Flex justifyContent="center" alignItems="center" padding="0.3em">
-        <Heading fontSize="2rem" color="blue" fontFamily="Arial">
-          IECOM - Preliminary
-        </Heading>
-      </Flex>
-      {examId ? <ExamGate examId={examId}/> : "Loading..."}
+    <Box overflow="hidden">
+      {examId ? <ExamGate examId={examId} setTitle={setTitle}/> : "Loading..."}
     </Box>
   );
 };
 
 export default function ExamPageById() {
+  // state asf gr2 bodo
+  const [title, setTitle] = useState<string>("");
+
   return (
-    <AuthorizedRoleLayout>
-      <ExamPageComponent />
+    <AuthorizedRoleLayout title={title}>
+      <ExamPageComponent setTitle={setTitle}/>
     </AuthorizedRoleLayout>
   );
 }

@@ -22,12 +22,14 @@ import { MdArrowDropDown, MdReorder } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { useHoverMenu } from "~/utils/hooks/useHoverMenu";
 import { SignOutBtn } from "./SignOutBtn";
+import { Heading } from "@chakra-ui/react";
 
 interface NavbarProps {
   type?: "signin" | "signup";
+  title?: string;
 }
 
-export const Navbar = ({ type }: NavbarProps) => {
+export const Navbar = ({ type, title }: NavbarProps) => {
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -49,7 +51,6 @@ export const Navbar = ({ type }: NavbarProps) => {
 
   return (
     <Flex
-      justifyContent="space-between"
       px={{ base: "0.5em", md: "2em" }}
       py="2em"
       alignItems="center"
@@ -59,9 +60,13 @@ export const Navbar = ({ type }: NavbarProps) => {
       zIndex="1000"
       h={{ base: "5em", md: "4em" }}
       w="100%"
-      bg={isMobile ? "white" : "rgba(255, 255, 255, 0.7)"}
+      bg={isMobile ? "white" : "rgba(255, 255, 255, 1)"}
+      justifyContent="space-between"
     >
-      
+      <Box/>
+      <Heading fontSize="2rem" color="blue" fontFamily="Arial" textAlign="center">
+        {title ? title : " "}
+      </Heading>
       <Flex
         w="min(35em,60%)"
         justifyContent={{ base: "right" }}
@@ -90,8 +95,8 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
         <Menu>
           <MenuButton>
             {session.user.name
-              ? `Hello, ${session.user.name.split(" ")[0]}`
-              : "Hello"}
+              ? `Logged in as ${session.user.name}`
+              : "Not logged in"}
           </MenuButton>
           <MenuList border="1px solid gray">
             <Flex
@@ -100,11 +105,7 @@ const ButtonGroupDesktop = ({ session, router, type }: ButtonGroupProps) => {
               px="0.7em"
               py="0.5em"
             >
-              {session.user.role === "ADMIN" && (
-                <>
-                
-                </>
-              )}
+              {session.user.role === "ADMIN" && <></>}
               <SignOutBtn />
             </Flex>
           </MenuList>
@@ -134,10 +135,6 @@ const ButtonGroupMobile = ({ session, router, type }: ButtonGroupProps) => {
           <MdReorder size="2.5em" />
         </MenuButton>
         <MenuList display="flex" flexDir="column" w="100vw">
-          
-
-          <Box h="1px" w="90%" m="auto" my="1em" bg="black" />
-
           {!!session ? (
             <>
               <Button onClick={() => router.push("/profile")}>Profile</Button>
