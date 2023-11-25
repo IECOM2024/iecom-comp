@@ -1,0 +1,157 @@
+Date : 2023-11-24 14:41:31
+Directory : d:\Projects\iecom-comp
+Total : 82 files,  12566 codes, 222 comments, 763 blanks, all 13551 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| JSON               |          3 |      7,462 |          0 |          3 |      7,465 |
+| TypeScript JSX     |         44 |      2,877 |         12 |        305 |      3,194 |
+| TypeScript         |         27 |      1,558 |        141 |        280 |      1,979 |
+| Prisma             |          1 |        377 |         15 |        103 |        495 |
+| CSS                |          1 |        121 |          2 |         25 |        148 |
+| JavaScript         |          3 |         86 |         39 |         12 |        137 |
+| Docker             |          1 |         39 |          8 |         22 |         69 |
+| JSON with Comments |          1 |         29 |          5 |          1 |         35 |
+| Markdown           |          1 |         17 |          0 |         12 |         29 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                   |         82 |     12,566 |        222 |        763 |     13,551 |
+| . (Files)                                                                                           |          8 |      7,584 |         26 |         45 |      7,655 |
+| prisma                                                                                              |          1 |        377 |         15 |        103 |        495 |
+| src                                                                                                 |         73 |      4,605 |        181 |        615 |      5,401 |
+| src (Files)                                                                                         |          1 |         49 |         26 |          5 |         80 |
+| src\components                                                                                      |         26 |      2,070 |          9 |        215 |      2,294 |
+| src\components (Files)                                                                              |          2 |        204 |          1 |         31 |        236 |
+| src\components\Profile                                                                              |          3 |        253 |          1 |         30 |        284 |
+| src\components\admin                                                                                |          2 |        361 |          0 |         32 |        393 |
+| src\components\admin\ExamAdministration                                                             |          2 |        361 |          0 |         32 |        393 |
+| src\components\common                                                                               |          8 |        456 |          6 |         34 |        496 |
+| src\components\common (Files)                                                                       |          2 |         48 |          0 |          4 |         52 |
+| src\components\common\CustomForm                                                                    |          4 |        188 |          6 |         21 |        215 |
+| src\components\common\Timeline                                                                      |          2 |        220 |          0 |          9 |        229 |
+| src\components\exam                                                                                 |          4 |        519 |          0 |         55 |        574 |
+| src\components\exam (Files)                                                                         |          2 |         82 |          0 |         12 |         94 |
+| src\components\exam\PrelimExam                                                                      |          2 |        437 |          0 |         43 |        480 |
+| src\components\layout                                                                               |          7 |        277 |          1 |         33 |        311 |
+| src\components\layout (Files)                                                                       |          4 |         64 |          0 |         13 |         77 |
+| src\components\layout\base-components                                                               |          3 |        213 |          1 |         20 |        234 |
+| src\pages                                                                                           |         12 |        369 |          2 |         53 |        424 |
+| src\pages (Files)                                                                                   |          7 |        214 |          0 |         31 |        245 |
+| src\pages\admin                                                                                     |          2 |         91 |          0 |         13 |        104 |
+| src\pages\api                                                                                       |          2 |         19 |          1 |          4 |         24 |
+| src\pages\api\auth                                                                                  |          1 |          3 |          0 |          2 |          5 |
+| src\pages\api\trpc                                                                                  |          1 |         16 |          1 |          2 |         19 |
+| src\pages\exam                                                                                      |          1 |         45 |          1 |          5 |         51 |
+| src\server                                                                                          |         17 |      1,324 |        107 |        232 |      1,663 |
+| src\server (Files)                                                                                  |          2 |         24 |          1 |          9 |         34 |
+| src\server\api                                                                                      |         13 |      1,105 |         87 |        201 |      1,393 |
+| src\server\api (Files)                                                                              |          2 |         95 |         73 |         24 |        192 |
+| src\server\api\functions                                                                            |          3 |        101 |          7 |         18 |        126 |
+| src\server\api\functions\reusable-logic                                                             |          3 |        101 |          7 |         18 |        126 |
+| src\server\api\routers                                                                              |          8 |        909 |          7 |        159 |      1,075 |
+| src\server\api\routers (Files)                                                                      |          4 |        496 |          5 |         92 |        593 |
+| src\server\api\routers\prelim                                                                       |          4 |        413 |          2 |         67 |        482 |
+| src\server\auth                                                                                     |          2 |        195 |         19 |         22 |        236 |
+| src\styles                                                                                          |          8 |        543 |          4 |         62 |        609 |
+| src\styles (Files)                                                                                  |          3 |        188 |          2 |         31 |        221 |
+| src\styles\component                                                                                |          5 |        355 |          2 |         31 |        388 |
+| src\utils                                                                                           |          9 |        250 |         33 |         48 |        331 |
+| src\utils (Files)                                                                                   |          2 |         65 |         32 |         14 |        111 |
+| src\utils\elements                                                                                  |          1 |         35 |          0 |          4 |         39 |
+| src\utils\hooks                                                                                     |          6 |        150 |          1 |         30 |        181 |
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                            | language           | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| d:\Projects\iecom-comp\.eslintrc.cjs                                                                | JavaScript         |         27 |          3 |          3 |         33 |
+| d:\Projects\iecom-comp\Dockerfile                                                                   | Docker             |         39 |          8 |         22 |         69 |
+| d:\Projects\iecom-comp\README.md                                                                    | Markdown           |         17 |          0 |         12 |         29 |
+| d:\Projects\iecom-comp\creds.json                                                                   | JSON               |         13 |          0 |          1 |         14 |
+| d:\Projects\iecom-comp\next.config.mjs                                                              | JavaScript         |         10 |         10 |          4 |         24 |
+| d:\Projects\iecom-comp\package-lock.json                                                            | JSON               |      7,387 |          0 |          1 |      7,388 |
+| d:\Projects\iecom-comp\package.json                                                                 | JSON               |         62 |          0 |          1 |         63 |
+| d:\Projects\iecom-comp\prisma\schema.prisma                                                         | Prisma             |        377 |         15 |        103 |        495 |
+| d:\Projects\iecom-comp\src\components\Profile\EditPictureModal.tsx                                  | TypeScript JSX     |         53 |          1 |          7 |         61 |
+| d:\Projects\iecom-comp\src\components\Profile\EditProfileModal.tsx                                  | TypeScript JSX     |         89 |          0 |          9 |         98 |
+| d:\Projects\iecom-comp\src\components\Profile\index.tsx                                             | TypeScript JSX     |        111 |          0 |         14 |        125 |
+| d:\Projects\iecom-comp\src\components\SignIn.tsx                                                    | TypeScript JSX     |         84 |          0 |         14 |         98 |
+| d:\Projects\iecom-comp\src\components\SignUp.tsx                                                    | TypeScript JSX     |        120 |          1 |         17 |        138 |
+| d:\Projects\iecom-comp\src\components\admin\ExamAdministration\ExamAttendanceRow.tsx                | TypeScript JSX     |        108 |          0 |         10 |        118 |
+| d:\Projects\iecom-comp\src\components\admin\ExamAdministration\index.tsx                            | TypeScript JSX     |        253 |          0 |         22 |        275 |
+| d:\Projects\iecom-comp\src\components\common\ContentCard.tsx                                        | TypeScript JSX     |         23 |          0 |          2 |         25 |
+| d:\Projects\iecom-comp\src\components\common\CustomForm\DateInput.tsx                               | TypeScript JSX     |         31 |          0 |          6 |         37 |
+| d:\Projects\iecom-comp\src\components\common\CustomForm\FileInput.tsx                               | TypeScript JSX     |         61 |          0 |          6 |         67 |
+| d:\Projects\iecom-comp\src\components\common\CustomForm\TimeInput.tsx                               | TypeScript JSX     |         31 |          0 |          5 |         36 |
+| d:\Projects\iecom-comp\src\components\common\CustomForm\index.tsx                                   | TypeScript JSX     |         65 |          6 |          4 |         75 |
+| d:\Projects\iecom-comp\src\components\common\Loading.tsx                                            | TypeScript JSX     |         25 |          0 |          2 |         27 |
+| d:\Projects\iecom-comp\src\components\common\Timeline\TimelineCard.tsx                              | TypeScript JSX     |        146 |          0 |          5 |        151 |
+| d:\Projects\iecom-comp\src\components\common\Timeline\index.tsx                                     | TypeScript JSX     |         74 |          0 |          4 |         78 |
+| d:\Projects\iecom-comp\src\components\exam\ExamGate.tsx                                             | TypeScript JSX     |         79 |          0 |         12 |         91 |
+| d:\Projects\iecom-comp\src\components\exam\PrelimExam\SubmitConsentBtn.tsx                          | TypeScript JSX     |         74 |          0 |          5 |         79 |
+| d:\Projects\iecom-comp\src\components\exam\PrelimExam\index.tsx                                     | TypeScript JSX     |        363 |          0 |         38 |        401 |
+| d:\Projects\iecom-comp\src\components\exam\SimulExam.tsx                                            | TypeScript JSX     |          3 |          0 |          0 |          3 |
+| d:\Projects\iecom-comp\src\components\layout\AdminRoleLayout.tsx                                    | TypeScript JSX     |         22 |          0 |          6 |         28 |
+| d:\Projects\iecom-comp\src\components\layout\AuthorizedRoleLayout.tsx                               | TypeScript JSX     |         17 |          0 |          2 |         19 |
+| d:\Projects\iecom-comp\src\components\layout\CheckAuth.tsx                                          | TypeScript JSX     |         21 |          0 |          3 |         24 |
+| d:\Projects\iecom-comp\src\components\layout\PublicLayout.tsx                                       | TypeScript JSX     |          4 |          0 |          2 |          6 |
+| d:\Projects\iecom-comp\src\components\layout\base-components\BaseLayout.tsx                         | TypeScript JSX     |         31 |          1 |          5 |         37 |
+| d:\Projects\iecom-comp\src\components\layout\base-components\Navbar.tsx                             | TypeScript JSX     |        141 |          0 |         12 |        153 |
+| d:\Projects\iecom-comp\src\components\layout\base-components\SignOutBtn.tsx                         | TypeScript JSX     |         41 |          0 |          3 |         44 |
+| d:\Projects\iecom-comp\src\env.mjs                                                                  | JavaScript         |         49 |         26 |          5 |         80 |
+| d:\Projects\iecom-comp\src\pages\404.tsx                                                            | TypeScript JSX     |         12 |          0 |          2 |         14 |
+| d:\Projects\iecom-comp\src\pages\_app.tsx                                                           | TypeScript JSX     |         20 |          0 |          3 |         23 |
+| d:\Projects\iecom-comp\src\pages\admin\exam-administration.tsx                                      | TypeScript JSX     |         65 |          0 |          9 |         74 |
+| d:\Projects\iecom-comp\src\pages\admin\index.tsx                                                    | TypeScript JSX     |         26 |          0 |          4 |         30 |
+| d:\Projects\iecom-comp\src\pages\api\auth\[...nextauth].ts                                          | TypeScript         |          3 |          0 |          2 |          5 |
+| d:\Projects\iecom-comp\src\pages\api\trpc\[trpc].ts                                                 | TypeScript         |         16 |          1 |          2 |         19 |
+| d:\Projects\iecom-comp\src\pages\dashboard.tsx                                                      | TypeScript JSX     |         85 |          0 |          8 |         93 |
+| d:\Projects\iecom-comp\src\pages\exam\[examId].tsx                                                  | TypeScript JSX     |         45 |          1 |          5 |         51 |
+| d:\Projects\iecom-comp\src\pages\index.tsx                                                          | TypeScript JSX     |         33 |          0 |          7 |         40 |
+| d:\Projects\iecom-comp\src\pages\profile.tsx                                                        | TypeScript JSX     |         15 |          0 |          3 |         18 |
+| d:\Projects\iecom-comp\src\pages\signin.tsx                                                         | TypeScript JSX     |         28 |          0 |          5 |         33 |
+| d:\Projects\iecom-comp\src\pages\signup.tsx                                                         | TypeScript JSX     |         21 |          0 |          3 |         24 |
+| d:\Projects\iecom-comp\src\server\api\functions\reusable-logic\calculate-duration.ts                | TypeScript         |         19 |          0 |          2 |         21 |
+| d:\Projects\iecom-comp\src\server\api\functions\reusable-logic\prelim-participant-get-attendance.ts | TypeScript         |         64 |          1 |         11 |         76 |
+| d:\Projects\iecom-comp\src\server\api\functions\reusable-logic\prelim-randomizer.ts                 | TypeScript         |         18 |          6 |          5 |         29 |
+| d:\Projects\iecom-comp\src\server\api\root.ts                                                       | TypeScript         |         14 |          6 |          3 |         23 |
+| d:\Projects\iecom-comp\src\server\api\routers\exam.ts                                               | TypeScript         |        313 |          3 |         61 |        377 |
+| d:\Projects\iecom-comp\src\server\api\routers\prelim\admin.ts                                       | TypeScript         |          0 |          0 |          1 |          1 |
+| d:\Projects\iecom-comp\src\server\api\routers\prelim\attendance.ts                                  | TypeScript         |         61 |          0 |         17 |         78 |
+| d:\Projects\iecom-comp\src\server\api\routers\prelim\index.ts                                       | TypeScript         |          7 |          0 |          1 |          8 |
+| d:\Projects\iecom-comp\src\server\api\routers\prelim\site.ts                                        | TypeScript         |        345 |          2 |         48 |        395 |
+| d:\Projects\iecom-comp\src\server\api\routers\profile.ts                                            | TypeScript         |         48 |          0 |         11 |         59 |
+| d:\Projects\iecom-comp\src\server\api\routers\storage.ts                                            | TypeScript         |        110 |          1 |         15 |        126 |
+| d:\Projects\iecom-comp\src\server\api\routers\user.ts                                               | TypeScript         |         25 |          1 |          5 |         31 |
+| d:\Projects\iecom-comp\src\server\api\trpc.ts                                                       | TypeScript         |         81 |         67 |         21 |        169 |
+| d:\Projects\iecom-comp\src\server\auth\index.ts                                                     | TypeScript         |        116 |         17 |         11 |        144 |
+| d:\Projects\iecom-comp\src\server\auth\withSession.ts                                               | TypeScript         |         79 |          2 |         11 |         92 |
+| d:\Projects\iecom-comp\src\server\bucket.ts                                                         | TypeScript         |         12 |          1 |          5 |         18 |
+| d:\Projects\iecom-comp\src\server\db.ts                                                             | TypeScript         |         12 |          0 |          4 |         16 |
+| d:\Projects\iecom-comp\src\styles\component\button.tsx                                              | TypeScript JSX     |        192 |          0 |         10 |        202 |
+| d:\Projects\iecom-comp\src\styles\component\colors.tsx                                              | TypeScript JSX     |         68 |          0 |         11 |         79 |
+| d:\Projects\iecom-comp\src\styles\component\input.tsx                                               | TypeScript JSX     |         30 |          1 |          3 |         34 |
+| d:\Projects\iecom-comp\src\styles\component\table.tsx                                               | TypeScript JSX     |         38 |          0 |          4 |         42 |
+| d:\Projects\iecom-comp\src\styles\component\textarea.tsx                                            | TypeScript JSX     |         27 |          1 |          3 |         31 |
+| d:\Projects\iecom-comp\src\styles\fonts.tsx                                                         | TypeScript JSX     |         34 |          0 |          3 |         37 |
+| d:\Projects\iecom-comp\src\styles\globals.css                                                       | CSS                |        121 |          2 |         25 |        148 |
+| d:\Projects\iecom-comp\src\styles\theme.tsx                                                         | TypeScript JSX     |         33 |          0 |          3 |         36 |
+| d:\Projects\iecom-comp\src\utils\api.ts                                                             | TypeScript         |         30 |         32 |          6 |         68 |
+| d:\Projects\iecom-comp\src\utils\elements\PasswordInput.tsx                                         | TypeScript JSX     |         35 |          0 |          4 |         39 |
+| d:\Projects\iecom-comp\src\utils\file.ts                                                            | TypeScript         |         35 |          0 |          8 |         43 |
+| d:\Projects\iecom-comp\src\utils\hooks\useDownloader.ts                                             | TypeScript         |         32 |          0 |          5 |         37 |
+| d:\Projects\iecom-comp\src\utils\hooks\useHoverMenu.ts                                              | TypeScript         |         32 |          0 |          5 |         37 |
+| d:\Projects\iecom-comp\src\utils\hooks\useIsMobile.ts                                               | TypeScript         |          5 |          0 |          2 |          7 |
+| d:\Projects\iecom-comp\src\utils\hooks\useToaster.ts                                                | TypeScript         |         42 |          1 |          6 |         49 |
+| d:\Projects\iecom-comp\src\utils\hooks\useUploader.ts                                               | TypeScript         |         26 |          0 |          9 |         35 |
+| d:\Projects\iecom-comp\src\utils\hooks\useWindowDimensions.ts                                       | TypeScript         |         13 |          0 |          3 |         16 |
+| d:\Projects\iecom-comp\tsconfig.json                                                                | JSON with Comments |         29 |          5 |          1 |         35 |
+| Total                                                                                               |                    |     12,566 |        222 |        763 |     13,551 |
++-----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

@@ -36,13 +36,17 @@ export const Profile = () => {
 
   useEffect(() => {
     if (!profile) return;
-    downloader({
-      folder: FolderEnum.PROFILE,
-      filename: `${profile.id}.png`,
-    }).then(({ url }) => setImageUrl(url));
-  }, [profile]);
-
-  console.log(imageUrl);
+    if (!profile.image) {
+      return;
+    } else if (profile.image === "GS") {
+      downloader({
+        folder: FolderEnum.PROFILE,
+        filename: `${profile.id}.png`,
+      }).then(({ url }) => setImageUrl(url));
+    } else {
+      setImageUrl(profile.image);
+    }
+  }, [profile, downloader]);
 
   if (!profile) return <></>;
 
@@ -62,8 +66,15 @@ export const Profile = () => {
       FolderEnum.PROFILE,
       AllowableFileTypeEnum.JPEG,
       picInput
-    );
-    profileQuery.refetch();
+    ).then(() => {
+      profileMutation
+        .mutateAsync({
+          image: "GS",
+        })
+        .then(() => {
+          profileQuery.refetch();
+        });
+    });
   };
 
   return (
@@ -84,15 +95,15 @@ export const Profile = () => {
       />
       <TableContainer>
         <Table>
-          <ProfileInfoRow placeholder="Name" value={profile.name} />
-          <ProfileInfoRow placeholder="Email" value={profile.email} />
+          <ProfileInfoRow placeholder="Name" value={profile.name ?? ""} />
+          <ProfileInfoRow placeholder="Email" value={profile.email ?? ""} />
         </Table>
       </TableContainer>
       {!profileQuery.isLoading && (
         <EditProfileModal
           initState={{
-            name: profile.name || "",
-            email: profile.email || "",
+            name: profile.name ?? "",
+            email: profile.email ?? "",
           }}
           updateProfile={updateProfile}
         />
@@ -103,7 +114,7 @@ export const Profile = () => {
 
 interface ProfileInfoRowProps {
   placeholder: string;
-  value: any;
+  value: string;
 }
 
 const ProfileInfoRow = ({ placeholder, value }: ProfileInfoRowProps) => {

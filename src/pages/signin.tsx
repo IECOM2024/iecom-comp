@@ -17,7 +17,7 @@ export default function Signin({
 
   return (
     <PublicLayout>
-      <SignIn csrfToken={csrfToken || ""} />
+      <SignIn csrfToken={csrfToken ?? ""} />
     </PublicLayout>
   );
 }

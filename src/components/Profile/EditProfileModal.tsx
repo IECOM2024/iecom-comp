@@ -77,8 +77,8 @@ export const EditProfileModal = ({
 
 const profileInfoRow = (
   placeholder: string,
-  inputState: any,
-  setInputState: React.SetStateAction<typeof inputState>
+  inputState: string | undefined,
+  setInputState: React.Dispatch<React.SetStateAction<typeof inputState>>
 ) => {
   return (
     <Tr h="4em">

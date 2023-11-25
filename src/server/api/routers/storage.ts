@@ -9,15 +9,13 @@ import {
 import { AllowableFileTypeEnum, FolderEnum } from "~/utils/file";
 import { bucket } from "~/server/bucket";
 import { env } from "~/env.mjs";
+import { zodStorageFolderLiteral } from "../functions/stotage-folder-literal";
 
 export const storageRouter = createTRPCRouter({
   generateURLForDownload: publicProcedure
     .input(
       z.object({
-        folder: z.union([
-          z.literal(FolderEnum.PROFILE),
-          z.literal(FolderEnum.DOCUMENT),
-        ]),
+        folder: zodStorageFolderLiteral(),
         filename: z.string()
       })
     )
@@ -47,15 +45,14 @@ export const storageRouter = createTRPCRouter({
   generateURLForUpload: protectedProcedure
     .input(
       z.object({
-        folder: z.union([
-          z.literal(FolderEnum.PROFILE),
-          z.literal(FolderEnum.DOCUMENT),
-        ]),
+        folder: zodStorageFolderLiteral(),
         filename: z.string(),
         contentType: z.union([
           z.literal(AllowableFileTypeEnum.PDF),
           z.literal(AllowableFileTypeEnum.PNG),
-          z.literal(AllowableFileTypeEnum.JPEG)
+          z.literal(AllowableFileTypeEnum.JPEG),
+          z.literal(AllowableFileTypeEnum.ZIP),
+          z.literal(AllowableFileTypeEnum.PICTURES),
         ])
       })
     )
@@ -121,5 +118,17 @@ export const storageRouter = createTRPCRouter({
       return {
         url
       };
+    }),
+
+    checkIfFileExists: protectedProcedure.input(z.object({
+      folder: zodStorageFolderLiteral(),
+      filename: z.string()
+    })).mutation(async ({ input }) => {
+      const ref = bucket.file(`${input.folder}/${input.filename}`);
+      const [exists] = await ref.exists();
+      return {
+        exists
+      };
     })
+
 });

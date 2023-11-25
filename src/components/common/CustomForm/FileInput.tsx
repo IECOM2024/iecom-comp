@@ -1,6 +1,5 @@
 import { Button, Flex, Image, Input, Text } from "@chakra-ui/react";
 import { AllowableFileTypeEnum, downloadFile } from "~/utils/file";
-import FileSaver from "file-saver";
 
 export interface FileInputProps {
   fileStateArr: [
