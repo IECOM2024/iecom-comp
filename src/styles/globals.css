@@ -146,3 +146,13 @@ a {
   width: 50%;
   height: auto;
 }
+
+.prelim-question-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prelim-question-wrapper table td {
+  border: 1px solid black;
+  padding: 0.5rem;
+}

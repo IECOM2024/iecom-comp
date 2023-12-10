@@ -52,6 +52,7 @@ export const prelimSiteRouter = createTRPCRouter({
         const prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
           where: {
             prelimInfoId: examInfo.id,
+            userId: ctx.session?.user.id,
           },
           include: {
             answerData: true,
@@ -123,11 +124,17 @@ export const prelimSiteRouter = createTRPCRouter({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const examInfo = await ctx.prisma.prelimInfo.findFirstOrThrow({
+        const examInfo = await ctx.prisma.prelimInfo.findFirst({
           where: {
             examId: input.examId,
           },
         });
+
+        if (!examInfo)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Exam not found",
+          });
 
         if (moment().isBefore(examInfo.startTime))
           throw new TRPCError({
@@ -140,11 +147,17 @@ export const prelimSiteRouter = createTRPCRouter({
             message: "Exam has ended.",
           });
 
-        const prelimAttendance =
-          await ctx.prisma.prelimAttendance.findFirstOrThrow({
-            where: {
-              prelimInfoId: examInfo.id,
-            },
+        const prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
+          where: {
+            prelimInfoId: examInfo.id,
+            userId: ctx.session?.user.id,
+          },
+        });
+
+        if (!prelimAttendance)
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not enrolled on this exam.",
           });
 
         if (prelimAttendance.durationRemaining === 0)
@@ -204,12 +217,19 @@ export const prelimSiteRouter = createTRPCRouter({
             message: "Exam has ended.",
           });
 
-        const prelimAttendance =
-          await ctx.prisma.prelimAttendance.findFirstOrThrow({
-            where: {
-              prelimInfoId: examInfo.id,
-            },
+        const prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
+          where: {
+            prelimInfoId: examInfo.id,
+            userId: ctx.session?.user.id,
+          },
+        });
+
+        if (!prelimAttendance) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not enrolled on this exam.",
           });
+        }
 
         const durationRemaining =
           prelimAttendance.status === ExamAttendanceStatus.TAKEN
@@ -321,16 +341,23 @@ export const prelimSiteRouter = createTRPCRouter({
             message: "Exam has ended.",
           });
 
-        const prelimAttendance =
-          await ctx.prisma.prelimAttendance.findFirstOrThrow({
-            where: {
-              prelimInfoId: examInfo.id,
-            },
-            select: {
-              durationRemaining: true,
-              id: true,
-            },
+        const prelimAttendance = await ctx.prisma.prelimAttendance.findFirst({
+          where: {
+            prelimInfoId: examInfo.id,
+            userId: ctx.session?.user.id,
+          },
+          select: {
+            durationRemaining: true,
+            id: true,
+          },
+        });
+
+        if (!prelimAttendance) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not enrolled on this exam.",
           });
+        }
 
         if (prelimAttendance.durationRemaining === 0)
           throw new TRPCError({ code: "FORBIDDEN", message: "Time is out." });

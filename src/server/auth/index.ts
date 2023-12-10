@@ -68,6 +68,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+    
   },
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -105,7 +106,6 @@ export const authOptions: NextAuthOptions = {
             code: "BAD_REQUEST",
             message: "No user found",
           });
-          console.log(user)
         if (!user.hashPassword)
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -121,6 +121,10 @@ export const authOptions: NextAuthOptions = {
           });
         return user;
       },
+    }),
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
   ],
   pages: {

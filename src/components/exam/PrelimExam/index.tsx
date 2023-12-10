@@ -6,6 +6,7 @@ import {
   Grid,
   Heading,
   Image,
+  Img,
   Input,
   Radio,
   RadioGroup,
@@ -14,7 +15,7 @@ import {
   VStack,
   useToast,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FlagStatus } from "@prisma/client";
 import { api } from "~/utils/api";
 import { useRouter } from "next/router";
@@ -22,7 +23,7 @@ import moment from "moment";
 import { MdFlag } from "react-icons/md";
 import { Loading } from "../../common/Loading";
 import { BtnSubmitConsent } from "./SubmitConsentBtn";
-import ReactHtmlParser from 'react-html-parser';
+import ReactHtmlParser from "react-html-parser";
 
 interface PrelimExamProps {
   examId: string;
@@ -35,6 +36,8 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
   const [pNumber, setPNumber] = useState(1);
   const [currentQ, setCurrentQ] = useState(1);
   const [answer, setAnswer] = useState("" as string);
+
+  const [isLapsed, setIsLapsed] = useState(false);
 
   const [remainingTime, setRemainingTime] = useState(0);
 
@@ -78,6 +81,9 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
   useEffect(() => {
     if (prelimInfo?.durationRemaining) {
       setRemainingTime(prelimInfo.durationRemaining);
+      setTimeout(() => {
+        setIsLapsed(true);
+      }, 500);
       const interval = setInterval(() => {
         setRemainingTime((prev) => prev - 1000);
       }, 1000);
@@ -91,17 +97,7 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
     }
   }, [problemData?.answerData?.answer]);
 
-  useEffect(() => {
-    if (remainingTime <= 0) {
-      
-    }
-  });
-
-  if (!prelimInfo) {
-    return <Loading />;
-  }
-
-  const submitExam = () => {
+  const submitExam = useCallback(() => {
     prelimSubmitExamMutation.mutateAsync({ examId: examId }).then(() => {
       toast({
         title: "Exam Submitted",
@@ -110,10 +106,39 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
         isClosable: true,
       });
       setTimeout(() => {
-        router.push("/dashboard")
+        router.push("/dashboard");
       }, 3000);
     });
-  };
+  }, [examId, prelimSubmitExamMutation, router, toast]);
+
+  useEffect(() => {
+    if (
+      remainingTime <= 0 &&
+      prelimInfo &&
+      !prelimInfoQuery.isLoading &&
+      isLapsed
+    ) {
+      toast({
+        title: "Time is up!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsLapsed(false);
+      submitExam();
+    }
+  }, [
+    remainingTime,
+    prelimInfo,
+    prelimInfoQuery.isLoading,
+    isLapsed,
+    submitExam,
+    toast,
+  ]);
+
+  if (!prelimInfo) {
+    return <Loading />;
+  }
 
   const { answerData } = problemData ?? {};
 
@@ -208,66 +233,103 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
           <Flex
             direction="column"
             position="relative"
-            padding="3rem 1.5rem"
             gap="1.5rem"
             zIndex="2"
             fontSize="1.5rem"
             fontFamily="Arial"
-            paddingLeft="3rem"
-            bg="/comp-light.png"
+            bg="whiteCream"
           >
-            <VStack align="flex-start">
-              <Text fontWeight="semibold" mb="2rem">
-                Question {currentQ}
-              </Text>
-              <Text className="prelim-question-wrapper">{ReactHtmlParser(problemData.content.question)}</Text>
-            </VStack>
-            {problemData.type === "MC" ? (
-              <VStack
-                spacing={2}
-                paddingBlock="1rem"
-                align="flex-start"
-                paddingLeft="3rem"
-                zIndex="2"
-              >
-                <Text fontSize="1.125rem">Choose one:</Text>
-                <RadioGroup value={answer} onChange={setAnswer}>
-                  <Stack spacing={4} paddingLeft="1rem">
-                    <Radio colorScheme="linkedin" value="A">
-                      {problemData.content.answerA}
-                    </Radio>
-                    <Radio colorScheme="linkedin" value="B">
-                      {problemData.content.answerB}
-                    </Radio>
-                    {problemData.content.answerC && (
-                      <>
-                        <Radio colorScheme="linkedin" value="C">
+            <Text fontWeight="semibold" mb="2rem" ml="3rem" mt="3rem">
+              Question #{currentQ}
+            </Text>
+            <Flex
+              borderBottom="5px solid rgba(5,89,132,0.7)"
+              borderTop="5px solid rgba(5,89,132,0.7)"
+              flexDir="column"
+              w="100%"
+              pl="4.5rem"
+              pr="1.5rem"
+              pb="2rem"
+            >
+              <VStack align="flex-start">
+                <Box className="prelim-question-wrapper">
+                  {ReactHtmlParser(problemData.content.question)}
+                </Box>
+              </VStack>
+              {problemData.type === "MC" ? (
+                <VStack
+                  spacing={2}
+                  paddingBlock="1rem"
+                  align="flex-start"
+                  paddingLeft="3rem"
+                  zIndex="2"
+                >
+                  <Text fontSize="1.125rem">Choose one:</Text>
+                  <RadioGroup value={answer} onChange={setAnswer}>
+                    <Stack spacing={4} paddingLeft="1rem">
+                      {problemData.content.answerA && (
+                        <Radio
+                          colorScheme="linkedin"
+                          value="A"
+                          border="0.5px solid blue"
+                        >
+                          {problemData.content.answerA}
+                        </Radio>
+                      )}
+                      {problemData.content.answerB && (
+                        <Radio
+                          colorScheme="linkedin"
+                          value="B"
+                          border="0.5px solid blue"
+                        >
+                          {problemData.content.answerB}
+                        </Radio>
+                      )}
+                      {problemData.content.answerC && (
+                        <Radio
+                          colorScheme="linkedin"
+                          value="C"
+                          border="0.5px solid blue"
+                        >
                           {problemData.content.answerC}
                         </Radio>
-                        <Radio colorScheme="linkedin" value="D">
+                      )}
+                      {problemData.content.answerD && (
+                        <Radio
+                          colorScheme="linkedin"
+                          value="D"
+                          border="0.5px solid blue"
+                        >
                           {problemData.content.answerD}
                         </Radio>
-                        <Radio colorScheme="linkedin" value="E">
+                      )}
+                      {problemData.content.answerE && (
+                        <Radio
+                          colorScheme="linkedin"
+                          value="E"
+                          border="0.5px solid blue"
+                        >
                           {problemData.content.answerE}
                         </Radio>
-                      </>
-                    )}
-                  </Stack>
-                </RadioGroup>
-              </VStack>
-            ) : (
-              <Input
-                type="text"
-                variant="unstyled"
-                borderBottom="1px"
-                borderRadius="0"
-                placeholder="Answer"
-                zIndex="2"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                maxWidth="65ch"
-              />
-            )}
+                      )}
+                    </Stack>
+                  </RadioGroup>
+                </VStack>
+              ) : (
+                <Input
+                  type="text"
+                  variant="unstyled"
+                  borderBottom="1px"
+                  borderRadius="0"
+                  placeholder="Answer"
+                  zIndex="2"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  maxWidth="65ch"
+                  mt="2em"
+                />
+              )}
+            </Flex>
           </Flex>
         ) : (
           <Flex fontSize="xl" padding="4.5rem">
@@ -288,6 +350,9 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
               <Text>Flag Question</Text>
             </Button>
           </Flex>
+          {/* <Flex>
+            <Button onClick={submitAnswer}>Save</Button>
+          </Flex> */}
           <Flex gap="1em">
             <Button onClick={prevPage} w="6em">
               <Text>Previous</Text>
@@ -304,67 +369,19 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
         height="100%"
         justifyContent="space-between"
         alignItems="center"
-        bgImage="/comp-dark.png"
-          width="100%"
-          h="100%"
-          bgRepeat="repeat-y"
-          w="30vw"
+        width="100%"
+        h="100%"
+        bgRepeat="repeat-y"
+        w="30vw"
       >
-        <VStack paddingBlock="2rem" spacing={8}>
-          <Box padding=".5rem 1rem" borderRadius="1rem" bgColor="#FBEDD199">
-            <Heading fontFamily="Arial" fontSize="1.5rem" color="blue">
-              Navigation
-            </Heading>
-          </Box>
-          <Grid gridTemplateColumns="repeat(5, 1fr)" gap="1rem">
-            {mergedProblemAnswerData.map((problem, index) => (
-              <Flex
-                bgColor={currentQ === index + 1 ? "gray.500" : "whiteCream"}
-                direction="column"
-                height="4.5rem"
-                width="3.5rem"
-                borderRadius=".75rem"
-                key={problem.id}
-                onClick={() => {
-                  jumpToPage(index + 1);
-                }}
-                cursor="pointer"
-                _hover={
-                  currentQ === index + 1
-                    ? {}
-                    : {
-                        bgColor: "#DACCC1",
-                      }
-                }
-              >
-                <Box
-                  height="1.375rem"
-                  width="100%"
-                  borderRadius=".75rem .75rem 0 0"
-                  bgColor={
-                    problem.answerData
-                      ? problem.answerData.flagStatus === FlagStatus.UNANSWERED
-                        ? "white"
-                        : problem.answerData.flagStatus === FlagStatus.FLAGGED
-                        ? "yellow"
-                        : "blue"
-                      : "white"
-                  }
-                />
-                <Center
-                  fontWeight="semibold"
-                  fontSize="1.5rem"
-                  fontFamily="Arial"
-                  color={currentQ === index + 1 ? "white" : "blue"}
-                  flexGrow={1}
-                >
-                  {index + 1}
-                </Center>
-              </Flex>
-            ))}
-          </Grid>
-        </VStack>
-        <BtnSubmitConsent isRequiredAll={isAnsweredAll} onSubmit={submitExam}/>
+        <Box
+          bgImage="/comp-dark.png"
+          width="100%"
+          position="absolute"
+          left="0"
+          zIndex="-1"
+          h="100%"
+        />
         <VStack
           spacing={6}
           bgColor="#FBEDD199"
@@ -378,9 +395,66 @@ export const PrelimExam = ({ examId }: PrelimExamProps) => {
             {intToTime(remainingTime) ?? "--:--"}
           </Heading>
         </VStack>
-        <Box
-          
-        />
+        <VStack paddingBlock="2rem" spacing={8}>
+          <Box padding=".5rem 1rem" borderRadius="1rem" bgColor="#FBEDD199">
+            <Heading fontFamily="Arial" fontSize="1.5rem" color="blue">
+              Navigation
+            </Heading>
+          </Box>
+          <Flex overflowY="scroll">
+            <Grid gridTemplateColumns="repeat(5, 1fr)" gap="1rem">
+              {mergedProblemAnswerData.map((problem, index) => (
+                <Flex
+                  bgColor={currentQ === index + 1 ? "gray.500" : "whiteCream"}
+                  direction="column"
+                  height="4.5rem"
+                  width="3.5rem"
+                  borderRadius=".75rem"
+                  key={problem.id}
+                  onClick={() => {
+                    jumpToPage(index + 1);
+                  }}
+                  cursor="pointer"
+                  _hover={
+                    currentQ === index + 1
+                      ? {}
+                      : {
+                          bgColor: "#DACCC1",
+                        }
+                  }
+                >
+                  <Box
+                    height="1.375rem"
+                    width="100%"
+                    borderRadius=".75rem .75rem 0 0"
+                    bgColor={
+                      problem.answerData
+                        ? problem.answerData.flagStatus ===
+                          FlagStatus.UNANSWERED
+                          ? "white"
+                          : problem.answerData.flagStatus === FlagStatus.FLAGGED
+                          ? "yellow"
+                          : "blue"
+                        : "white"
+                    }
+                  />
+                  <Center
+                    fontWeight="semibold"
+                    fontSize="1.5rem"
+                    fontFamily="Arial"
+                    color={currentQ === index + 1 ? "white" : "blue"}
+                    flexGrow={1}
+                  >
+                    {index + 1}
+                  </Center>
+                </Flex>
+              ))}
+            </Grid>
+          </Flex>
+        </VStack>
+        <BtnSubmitConsent isRequiredAll={isAnsweredAll} onSubmit={submitExam} />
+
+        <Box />
       </Flex>
     </Flex>
   );

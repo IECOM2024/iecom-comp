@@ -64,7 +64,7 @@ export const Navbar = ({ type, title }: NavbarProps) => {
       justifyContent="space-between"
     >
       <Box/>
-      <Heading fontSize="2rem" color="blue" fontFamily="Arial" textAlign="center">
+      <Heading fontSize="2rem" color="blue" fontFamily="Arial" textAlign="left">
         {title ? title : " "}
       </Heading>
       <Flex

@@ -5,6 +5,7 @@ import { PrelimExam } from "./PrelimExam";
 import { Loading } from "../common/Loading";
 import moment from "moment";
 import { useEffect } from "react";
+import HtmlParser from "react-html-parser";
 
 interface ExamGateProps {
   examId: string;
@@ -53,7 +54,7 @@ export const ExamGate = ({ examId, setTitle }: ExamGateProps) => {
         >
           {examInfo.name}
         </Text>
-        {examInfo.description}
+        {HtmlParser(examInfo.description)}
 
         {moment().isBefore(examInfo.startTime) ? (
           <Text textAlign="center" w="100%">

@@ -30,7 +30,7 @@ export const BtnSubmitConsent = ({
       duration: 2500,
       isClosable: true,
     });
-  }
+  };
 
   return (
     <>
@@ -40,22 +40,34 @@ export const BtnSubmitConsent = ({
         padding="0.3em"
         w="100%"
       >
-        <Button onClick={isRequiredAll ? onOpen : rejectSubmit} colorScheme="blue" size="lg" width="100%">
+        <Button
+          onClick={isRequiredAll ? onOpen : rejectSubmit}
+          colorScheme="blue"
+          size="lg"
+          width="65%"
+        >
           Submit Exam
         </Button>
       </Flex>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent p="1.5em">
           <ModalHeader>Submit Exam</ModalHeader>
           <Text color="blue" fontSize="lg">
-            Are you sure you want to submit this exam? (You have answered all
+            Are you sure you want to submit this exam? The exam will be ended and you cannot go back (You have answered all
             questions)
           </Text>
           <ModalFooter>
-            <Flex gap="1em" flexDir={{ base: "column", lg: "row" }} alignItems="center">
+            <Flex
+              gap="1em"
+              flexDir={{ base: "column", lg: "row" }}
+              alignItems="center"
+            >
               <Button
-                onClick={onSubmit}
+                onClick={() => {
+                  onSubmit();
+                  onClose();
+                }}
                 colorScheme="blue"
                 w={{ base: "100%", lg: "8em" }}
                 color="black"

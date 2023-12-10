@@ -85,6 +85,7 @@ model User {
     ColorRunParticipantData          ColorRunParticipantData[]
     EssayCompetitionRegistrationData EssayCompetitionRegistrationData[]
     EssaySubmission                  EssaySubmission[]
+    SimulAttempt                     SimulAttempt[]
 }
 
 model VerificationToken {
@@ -336,6 +337,7 @@ model Exam {
 
     ExamEnrollment ExamEnrollment[]
     PrelimInfo     PrelimInfo[]
+    SimulInfo      SimulInfo[]
 }
 
 // Competition-Prelimination Exam Models
@@ -491,4 +493,65 @@ model Referral {
     maxUsed                         Int
     currentUsed                     Int
     MainCompetitionRegistrationData MainCompetitionRegistrationData[]
+}
+
+// Simulation Exam Models
+model SimulInfo {
+    id String @id @default(cuid())
+
+    examId String
+
+    name         String
+    description  String
+    startTime    DateTime
+    endTime      DateTime
+    noOfSections Int
+    isPublished  Boolean  @default(false)
+
+    SimulAttempt SimulAttempt[]
+    SimulProblem SimulProblem[]
+    exam         Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+model SimulAttempt {
+    id String @id @default(cuid())
+
+    userId String
+
+    status            ExamAttendanceStatus @default(ABSENT)
+    durationRemaining Int                  @default(0)
+    dueDate           DateTime
+    currentNumber     Int                  @default(0)
+    currentSection    Int                  @default(0)
+
+    user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+    simulInfo   SimulInfo     @relation(fields: [simulInfoId], references: [id])
+    simulInfoId String
+    simulAnswer SimulAnswer[]
+}
+
+model SimulProblem {
+    id String @id @default(cuid())
+
+    simulInfoId String
+
+    pNumber         Int
+    problemTitle    String
+    problemDesc     String
+    problemDuration Int
+
+    SimulAnswer SimulAnswer[]
+    simulInfo   SimulInfo     @relation(fields: [simulInfoId], references: [id])
+}
+
+model SimulAnswer {
+    id String @id @default(cuid())
+
+    answer     String?
+    flagStatus FlagStatus @default(UNANSWERED)
+
+    simulAttempt   SimulAttempt? @relation(fields: [simulAttemptId], references: [id])
+    simulAttemptId String?
+    simulProblem   SimulProblem? @relation(fields: [simulProblemId], references: [id])
+    simulProblemId String?
 }
