@@ -15,6 +15,7 @@ import {
   calculateDueDateFromNow,
 } from "../functions/reusable-logic/calculate-duration";
 import { prelimParticipantGetAttendance } from "../functions/reusable-logic/prelim-participant-get-attendance";
+import { simulParticipantGetAttempt } from "../functions/reusable-logic/simul-participant-get-attempt";
 
 export const ExamRouter = createTRPCRouter({
   participant: createTRPCRouter({
@@ -39,6 +40,10 @@ export const ExamRouter = createTRPCRouter({
           const examInfo = await prelimParticipantGetAttendance(ctx, exam);
 
           return examInfo;
+        } else if (exam.type == ExamType.SIMULATION) {
+          const simulInfo = await simulParticipantGetAttempt(ctx, exam);
+
+          return simulInfo;
         }
 
         return null;
@@ -95,10 +100,46 @@ export const ExamRouter = createTRPCRouter({
           };
         });
 
-      const examList = [...prelimExamList];
+      // simulInfo Queries
+
+      const simulAttemptList = await ctx.prisma.simulAttempt.findMany({
+        where: {
+          userId: session.user.id,
+        },
+      });
+
+      const simulExamList = examInfoList
+        .filter((examInfo) => examInfo.type == ExamType.SIMULATION)
+        .map((examInfo) => {
+          const simulAttempt = simulAttemptList.find(
+            (simulAttempt) => simulAttempt.simulInfoId == examInfo.id
+          );
+
+          return {
+            id: examInfo.id,
+            name: examInfo.name,
+            description: examInfo.description,
+            startTime: examInfo.startTime,
+            endTime: examInfo.endTime,
+            duration: examInfo.duration,
+            type: examInfo.type,
+            attendance: {
+              status: simulAttempt
+                ? simulAttempt.status
+                : ExamAttendanceStatus.ABSENT,
+              durationRemaining: simulAttempt
+                ? simulAttempt.durationRemaining
+                : examInfo.duration,
+              currentNumber: simulAttempt ? simulAttempt.currentNumber : 0,
+            },
+          };
+        });
+
+      const examList = [...prelimExamList, ...simulExamList];
 
       return examList;
     }),
+
     updateStatusConfirmConsent: participantProcedure
       .input(
         z.object({
@@ -180,6 +221,69 @@ export const ExamRouter = createTRPCRouter({
             });
 
           return updatedprelimAttendance;
+        } else if (exam.type == ExamType.SIMULATION) {
+          const simulInfo = await ctx.prisma.simulInfo.findFirst({
+            where: { examId: exam.id },
+          });
+
+          if (!simulInfo) throw new TRPCError({ code: "NOT_FOUND" });
+
+          let simulAttempt = await ctx.prisma.simulAttempt.findFirst({
+            where: {
+              simulInfoId: simulInfo.id,
+              userId: session.user.id,
+            },
+          });
+
+          // Check for enrollment, if no enrollment available, throw 401
+          if (!simulAttempt) {
+            const examEnrollment = await ctx.prisma.examEnrollment.findFirst({
+              where: {
+                examId: exam.id,
+                userId: session.user.id,
+              },
+            });
+
+            if (!examEnrollment) throw new TRPCError({ code: "FORBIDDEN" });
+
+            simulAttempt = await ctx.prisma.simulAttempt.create({
+              data: {
+                simulInfoId: simulInfo.id,
+                userId: session.user.id,
+                dueDate: calculateDueDateFromNow(exam.duration),
+                durationRemaining: exam.duration,
+                status: ExamAttendanceStatus.TAKEN,
+              },
+            });
+
+            return simulAttempt;
+          }
+
+          if (simulAttempt.status === ExamAttendanceStatus.FINISHED) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "User already finished the exam",
+            });
+          }
+
+          if (
+            simulAttempt.status === ExamAttendanceStatus.TAKEN ||
+            simulAttempt.status === ExamAttendanceStatus.PAUSED
+          ) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "User already taken exam",
+            });
+          }
+
+          const updatedSimulAttempt = await ctx.prisma.simulAttempt.update({
+            where: { id: simulAttempt.id },
+            data: {
+              status: ExamAttendanceStatus.TAKEN,
+            },
+          });
+
+          return updatedSimulAttempt;
         } else {
           return null;
         }
@@ -318,7 +422,7 @@ export const ExamRouter = createTRPCRouter({
           return {
             data: [],
             metadata: { totalCount: 0 },
-          }
+          };
         }
       }),
 
@@ -363,7 +467,11 @@ export const ExamRouter = createTRPCRouter({
           where: { id: input.prelimAttendanceId },
         });
 
-        if (!prelimAttendance) throw new TRPCError({ code: "NOT_FOUND", message: "User attendance not found" });
+        if (!prelimAttendance)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User attendance not found",
+          });
 
         const deletedPrelimAttendance =
           await ctx.prisma.prelimAttendance.delete({

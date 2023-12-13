@@ -11,4 +11,5 @@ export const zodStorageFolderLiteral = () =>
     z.literal(FolderEnum.ESSAY_COMP_FILES),
     z.literal(FolderEnum.ESSAY_COMP_PROOF),
     z.literal(FolderEnum.ESSAY_COMP_SUBMISSION),
+    z.literal(FolderEnum.SIMUL_COMP_FILES),
   ]);

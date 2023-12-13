@@ -6,6 +6,7 @@ import { Loading } from "../common/Loading";
 import moment from "moment";
 import { useEffect } from "react";
 import HtmlParser from "react-html-parser";
+import { SimulExam } from "./SimulExam";
 
 interface ExamGateProps {
   examId: string;
@@ -82,6 +83,12 @@ export const ExamGate = ({ examId, setTitle }: ExamGateProps) => {
   if (examInfo?.type === ExamType.PRELIMARY) {
     return <PrelimExam examId={examId} />;
   }
+
+  if (examInfo?.type === ExamType.SIMULATION) {
+    return <SimulExam examId={examId} />;
+  }
+
+  console.log(examInfo)
 
   if (examInfoQuery.isLoading) {
     return <Loading />;

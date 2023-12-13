@@ -9,6 +9,7 @@ export enum FolderEnum {
   ESSAY_COMP_FILES = "essay-comp-files",
   ESSAY_COMP_PROOF = "essay-comp-proof",
   ESSAY_COMP_SUBMISSION = "essay-comp-submission",
+  SIMUL_COMP_FILES = "simul-comp-files",
 }
 
 export enum AllowableFileTypeEnum {

@@ -4,6 +4,7 @@ import { storageRouter } from "./routers/storage";
 import { profileRouter } from "./routers/profile";
 import { PrelimRouter } from "./routers/prelim";
 import { ExamRouter } from "./routers/exam";
+import { simulRouter } from "./routers/simul";
 
 /**
  * This is the primary router for your server.
@@ -15,7 +16,8 @@ export const appRouter = createTRPCRouter({
   storage: storageRouter,
   profile: profileRouter,
   prelim: PrelimRouter,
-  exam: ExamRouter
+  exam: ExamRouter,
+  simul: simulRouter,
 });
 
 // export type definition of API

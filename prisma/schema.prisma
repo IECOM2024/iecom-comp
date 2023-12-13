@@ -501,16 +501,26 @@ model SimulInfo {
 
     examId String
 
-    name         String
-    description  String
-    startTime    DateTime
-    endTime      DateTime
-    noOfSections Int
-    isPublished  Boolean  @default(false)
+    name          String
+    description   String
+    startTime     DateTime
+    endTime       DateTime
+    noOfQuestions Int
+    isPublished   Boolean  @default(false)
 
     SimulAttempt SimulAttempt[]
     SimulProblem SimulProblem[]
     exam         Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+enum SimulAttemptPhase {
+    IDLE
+    ATTEMPTING
+    PAUSED
+    REDO_IDLE
+    REDO_ATTEMPTING
+    REDO_PAUSED
+    FINISHED
 }
 
 model SimulAttempt {
@@ -519,10 +529,10 @@ model SimulAttempt {
     userId String
 
     status            ExamAttendanceStatus @default(ABSENT)
+    phase             SimulAttemptPhase    @default(IDLE)
     durationRemaining Int                  @default(0)
     dueDate           DateTime
     currentNumber     Int                  @default(0)
-    currentSection    Int                  @default(0)
 
     user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
     simulInfo   SimulInfo     @relation(fields: [simulInfoId], references: [id])
@@ -547,8 +557,7 @@ model SimulProblem {
 model SimulAnswer {
     id String @id @default(cuid())
 
-    answer     String?
-    flagStatus FlagStatus @default(UNANSWERED)
+    fileUploadLink String?
 
     simulAttempt   SimulAttempt? @relation(fields: [simulAttemptId], references: [id])
     simulAttemptId String?
