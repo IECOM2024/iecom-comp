@@ -84,14 +84,18 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
       AllowableFileTypeEnum.PDF,
       data.file
     );
-    await uploader(
-      `${data.simulAttemptId}_${data.qNumber + 1}_extra.${data.file2.name
-        .split(".")
-        .pop()}`,
-      FolderEnum.SIMUL_COMP_FILES,
-      AllowableFileTypeEnum.ZIP,
-      data.file2
-    );
+    try {
+      await uploader(
+        `${data.simulAttemptId}_${data.qNumber + 1}_extra.${data.file2.name
+          .split(".")
+          .pop()}`,
+        FolderEnum.SIMUL_COMP_FILES,
+        AllowableFileTypeEnum.ZIP,
+        data.file2
+      );
+    } catch (e) {
+      console.log(e);
+    }
     await saveSimulAnswerMutation
       .mutateAsync({
         simulAttemptId: data.simulAttemptId,
@@ -99,9 +103,9 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
         fileUploadLink: `https://storage.googleapis.com/public-yekomvinlines/simul-comp-files/${
           data.simulAttemptId
         }_${data.qNumber + 1}.pdf`,
-        fileUploadLink2: `https://storage.googleapis.com/public-yekomvinlines/simul-comp-files/${
+        fileUploadLink2: data.file2 ? `https://storage.googleapis.com/public-yekomvinlines/simul-comp-files/${
           data.simulAttemptId
-        }_${data.qNumber + 1}_extra.${data.file2.name.split(".").pop()}`,
+        }_${data.qNumber + 1}_extra.${data.file2.name.split(".").pop()}` : undefined,
       })
       .then(() => {
         toast({
@@ -115,7 +119,6 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
       });
   };
 
-  
   if (!simulInfoData) {
     return <Loading />;
   }
@@ -125,8 +128,7 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
       simulInfoId: simulInfoData.simulInfo.id,
     });
     router.push(`/exam/${examId}`);
-  }
-
+  };
 
   return (
     <Flex flexDir="column" p="3em">
@@ -144,18 +146,12 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
           />
         ))}
       </Flex>
-      {
-        simulInfoData.simulAttempt.currentNumber >= simulInfoData.simulInfo.noOfQuestions && (
-          <Button
-            mt="2em"
-            onClick={endSimul}
-            w="min(20em, 90%)"
-            mx="auto"
-          >
-            End Exam
-          </Button>
-        )
-      }
+      {simulInfoData.simulAttempt.currentNumber >=
+        simulInfoData.simulInfo.noOfQuestions && (
+        <Button mt="2em" onClick={endSimul} w="min(20em, 90%)" mx="auto">
+          End Exam
+        </Button>
+      )}
     </Flex>
   );
 };
@@ -222,7 +218,7 @@ const SimulProblemModal = ({
       simulAttempt.phase === SimulAttemptPhase.ATTEMPTING ||
       simulAttempt.phase === SimulAttemptPhase.REDO_ATTEMPTING
     ) {
-      timeCalculator()
+      timeCalculator();
       setTimeout(() => {
         setIsLapsed(true);
       }, 150);
