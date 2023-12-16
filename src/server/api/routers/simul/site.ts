@@ -83,7 +83,7 @@ export const simulSiteRouter = createTRPCRouter({
             userId: ctx.session.user.id,
             status: ExamAttendanceStatus.TAKEN,
             phase: SimulAttemptPhase.IDLE,
-            dueDate: Date(),
+            dueDate: new Date(),
           },
         });
 
@@ -254,11 +254,12 @@ export const simulSiteRouter = createTRPCRouter({
       z.object({
         simulProblemId: z.string(),
         simulAttemptId: z.string(),
-        fileUploadLink: z.string(),
+        fileUploadLink: z.string().optional(),
+        fileUploadLink2: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { simulProblemId, simulAttemptId, fileUploadLink } = input;
+      const { simulProblemId, simulAttemptId, fileUploadLink, fileUploadLink2 } = input;
 
       const simulProblem = await ctx.prisma.simulProblem.findFirst({
         where: {
@@ -368,6 +369,7 @@ export const simulSiteRouter = createTRPCRouter({
         },
         data: {
           fileUploadLink,
+          fileUploadLink2,
         },
       });
 
@@ -429,6 +431,61 @@ export const simulSiteRouter = createTRPCRouter({
 
       return simulAttempt;
     }),
+
+  endSimul: participantProcedure.input(z.object({
+    simulInfoId: z.string(),
+  })).mutation(async ({ ctx, input }) => {
+    const { simulInfoId } = input;
+
+    const simulInfo = await ctx.prisma.simulInfo.findFirst({
+      where: {
+        id: simulInfoId,
+      },
+    });
+
+    if (!simulInfo) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Simul info not found",
+      });
+    }
+
+    let simulAttempt = await ctx.prisma.simulAttempt.findFirst({
+      where: {
+        simulInfoId: simulInfo.id,
+        userId: ctx.session.user.id,
+      },
+    });
+
+    if (!simulAttempt) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Simul attempt not found",
+      });
+    }
+
+    if (simulAttempt.currentNumber < simulInfo.noOfQuestions) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "You are not allowed to end the exam, please finish all questions first",
+      });
+    }
+
+    simulAttempt = await ctx.prisma.simulAttempt.update({
+      where: {
+        id: simulAttempt.id,
+      },
+      data: {
+        phase: SimulAttemptPhase.IDLE,
+        currentNumber: simulInfo.noOfQuestions + 1,
+        dueDate: new Date(),
+        status: ExamAttendanceStatus.FINISHED
+      },
+    });
+
+    return simulAttempt;
+  }),
+
 
   setRedoProblem: participantProcedure
     .input(

@@ -15,13 +15,14 @@ import {
 } from "@chakra-ui/react";
 import { SimulAttemptPhase } from "@prisma/client";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MdLock } from "react-icons/md";
 import { FileInput } from "~/components/common/CustomForm/FileInput";
 import { Loading } from "~/components/common/Loading";
 import { RouterOutputs, api } from "~/utils/api";
 import { AllowableFileTypeEnum, FolderEnum } from "~/utils/file";
 import { useUploader } from "~/utils/hooks/useUploader";
+import htmlParser from "react-html-parser";
 import moment, { duration } from "moment";
 import { get } from "lodash";
 
@@ -37,9 +38,11 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
   const simulInfoQuery = api.simul.site.getSimulInfo.useQuery({
     examId,
   });
+
   const saveSimulAnswerMutation = api.simul.site.saveSimulAnswer.useMutation();
   const submitSimulAnswerMuation =
     api.simul.site.submitSimulAnswer.useMutation();
+  const endSimulMutation = api.simul.site.endSimul.useMutation();
 
   const simulInfoData = simulInfoQuery.data;
 
@@ -58,27 +61,48 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
     });
   };
 
+  const endQuestion = async () => {
+    toast({
+      title: "Question Ended",
+      status: "error",
+      duration: 5000,
+      isClosable: true,
+    });
+    simulInfoQuery.refetch();
+  };
+
   const uploadAnswerFile = async (data: {
     simulAttemptId: string;
     qNumber: number;
     file: File;
+    file2: File;
     simulProblemId: string;
   }) => {
-    uploader(
-      `${data.simulAttemptId}_${data.qNumber + 1}.pdf`,
+    await uploader(
+      `${data.simulAttemptId}_${data.qNumber + 1}_answer.pdf`,
       FolderEnum.SIMUL_COMP_FILES,
       AllowableFileTypeEnum.PDF,
       data.file
-    )
-      .then((res) =>
-        saveSimulAnswerMutation.mutateAsync({
-          simulAttemptId: data.simulAttemptId,
-          simulProblemId: data.simulProblemId,
-          fileUploadLink: `https://storage.googleapis.com/public-yekomvinlines/simul-comp-files/${
-            data.simulAttemptId
-          }_${data.qNumber + 1}.pdf`,
-        })
-      )
+    );
+    await uploader(
+      `${data.simulAttemptId}_${data.qNumber + 1}_extra.${data.file2.name
+        .split(".")
+        .pop()}`,
+      FolderEnum.SIMUL_COMP_FILES,
+      AllowableFileTypeEnum.ZIP,
+      data.file2
+    );
+    await saveSimulAnswerMutation
+      .mutateAsync({
+        simulAttemptId: data.simulAttemptId,
+        simulProblemId: data.simulProblemId,
+        fileUploadLink: `https://storage.googleapis.com/public-yekomvinlines/simul-comp-files/${
+          data.simulAttemptId
+        }_${data.qNumber + 1}.pdf`,
+        fileUploadLink2: `https://storage.googleapis.com/public-yekomvinlines/simul-comp-files/${
+          data.simulAttemptId
+        }_${data.qNumber + 1}_extra.${data.file2.name.split(".").pop()}`,
+      })
       .then(() => {
         toast({
           title: "Success",
@@ -91,9 +115,18 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
       });
   };
 
+  
   if (!simulInfoData) {
     return <Loading />;
   }
+
+  const endSimul = async () => {
+    await endSimulMutation.mutateAsync({
+      simulInfoId: simulInfoData.simulInfo.id,
+    });
+    router.push(`/exam/${examId}`);
+  }
+
 
   return (
     <Flex flexDir="column" p="3em">
@@ -107,9 +140,22 @@ export const SimulExam = ({ examId }: SimulExamProps) => {
             getSimulProblemData={getSimulProblemData}
             uploadAnswerFile={uploadAnswerFile}
             durationRemaining={simulInfoData.remainingDuration ?? 0}
+            endQuestion={endQuestion}
           />
         ))}
       </Flex>
+      {
+        simulInfoData.simulAttempt.currentNumber >= simulInfoData.simulInfo.noOfQuestions && (
+          <Button
+            mt="2em"
+            onClick={endSimul}
+            w="min(20em, 90%)"
+            mx="auto"
+          >
+            End Exam
+          </Button>
+        )
+      }
     </Flex>
   );
 };
@@ -128,9 +174,11 @@ interface SimulQuestionModalProps {
     simulAttemptId: string;
     qNumber: number;
     file: File;
+    file2: File;
     simulProblemId: string;
   }) => Promise<void>;
   durationRemaining: number;
+  endQuestion: () => Promise<void>;
 }
 
 const SimulProblemModal = ({
@@ -140,9 +188,11 @@ const SimulProblemModal = ({
   getSimulProblemData,
   uploadAnswerFile,
   durationRemaining,
+  endQuestion,
 }: SimulQuestionModalProps) => {
   const { onOpen, onClose, isOpen } = useDisclosure();
   const fileStateArr = useState<File | null | undefined>(null);
+  const fileStateArr2 = useState<File | null | undefined>(null);
 
   const [remainingDuration, setRemainingDuration] = useState(-1);
 
@@ -152,36 +202,63 @@ const SimulProblemModal = ({
     | undefined
   >(null);
 
+  const [isLapsed, setIsLapsed] = useState(false);
+
+  const timeCalculator = useCallback(() => {
+    const calculatedDuration = -moment().diff(simulAttempt.dueDate, "ms");
+    setRemainingDuration(calculatedDuration);
+  }, [simulAttempt.dueDate]);
+
   useEffect(() => {
-    if (remainingDuration > 0) {
+    if (remainingDuration >= 0.2 && isLapsed) {
       setTimeout(() => {
-        setRemainingDuration(remainingDuration - 1000);
+        timeCalculator();
       }, 1000);
     }
-  }, [remainingDuration, setRemainingDuration]);
+  }, [isLapsed, remainingDuration, timeCalculator]);
 
   useEffect(() => {
     if (
       simulAttempt.phase === SimulAttemptPhase.ATTEMPTING ||
       simulAttempt.phase === SimulAttemptPhase.REDO_ATTEMPTING
     ) {
-      setRemainingDuration(durationRemaining);
+      timeCalculator()
+      setTimeout(() => {
+        setIsLapsed(true);
+      }, 150);
     }
-  }, [simulAttempt.phase, durationRemaining]);
+  }, [simulAttempt.phase, timeCalculator]);
 
   useEffect(() => {
-    if (durationRemaining < 0) {
+    if (remainingDuration < 0.2 && isLapsed) {
+      console.log("called");
       if (fileStateArr[0]) {
         uploadAnswerFile({
           simulAttemptId: simulAttempt.id,
           qNumber: simulQuestion.pNumber,
           file: fileStateArr[0]!,
+          file2: fileStateArr2[0]!,
           simulProblemId: simulQuestion.id,
         });
       }
+      setIsLapsed(false);
       onClose();
+      endQuestion();
     }
-  });
+  }, [
+    endQuestion,
+    setIsLapsed,
+    isLapsed,
+    fileStateArr,
+    fileStateArr2,
+    onClose,
+    simulAttempt.id,
+    simulQuestion,
+    uploadAnswerFile,
+    remainingDuration,
+    simulAnswer,
+    simulInfo,
+  ]);
 
   const handleGetSimulProblemData = () => {
     getSimulProblemData({
@@ -190,7 +267,6 @@ const SimulProblemModal = ({
     }).then((res) => {
       if (res) {
         setSimulAnswer(res);
-        setRemainingDuration(res.simulAttempt.durationRemaining);
       }
     });
   };
@@ -278,7 +354,7 @@ const SimulProblemModal = ({
       </Flex>
       <Modal onClose={onClose} isOpen={isOpen}>
         <ModalOverlay />
-        <ModalContent w="min(45em,95%)">
+        <ModalContent maxW="min(45em,95%)">
           <ModalCloseButton />
           <ModalHeader>
             <Text fontSize="1em" fontWeight="bold" color="blue">
@@ -296,7 +372,7 @@ const SimulProblemModal = ({
               </Flex>
             ) : (
               <Flex flexDir="column">
-                <Text>{simulQuestion.problemDesc}</Text>
+                <Text>{htmlParser(simulQuestion.problemDesc)}</Text>
                 <Text
                   mt="1em"
                   fontSize="2em"
@@ -315,6 +391,9 @@ const SimulProblemModal = ({
                 >
                   {intToTime(remainingDuration)}
                 </Text>
+                <Text mt="1em" fontSize="1em" color="blue" textAlign="center">
+                  Upload your answer file below in a pdf format
+                </Text>
                 <Flex mx="auto" mt="2em">
                   <FileInput
                     fileStateArr={fileStateArr}
@@ -324,6 +403,22 @@ const SimulProblemModal = ({
                     allowed={[AllowableFileTypeEnum.PDF]}
                   />
                 </Flex>
+
+                <Text mt="1em" fontSize="1em" color="blue" textAlign="center">
+                  Upload your calculation file below on any format, if there is
+                  more than one file, please zip it first
+                </Text>
+
+                <Flex mx="auto" mt="2em">
+                  <FileInput
+                    fileStateArr={fileStateArr2}
+                    imgUrl={
+                      simulAnswer?.simulAnswer.fileUploadLink ?? undefined
+                    }
+                    allowed={[AllowableFileTypeEnum.PDF]}
+                  />
+                </Flex>
+
                 {fileStateArr[0] && (
                   <Button
                     mt="2em"
@@ -332,11 +427,23 @@ const SimulProblemModal = ({
                         simulAttemptId: simulAttempt.id,
                         qNumber: simulQuestion.pNumber,
                         file: fileStateArr[0]!,
+                        file2: fileStateArr2[0]!,
                         simulProblemId: simulQuestion.id,
                       });
                     }}
                   >
                     Upload
+                  </Button>
+                )}
+                {simulAnswer?.simulAnswer.fileUploadLink && (
+                  <Button
+                    color="salmon"
+                    mt="1em"
+                    onClick={() => {
+                      endQuestion().then(onClose);
+                    }}
+                  >
+                    End Question
                   </Button>
                 )}
               </Flex>

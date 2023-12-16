@@ -558,6 +558,7 @@ model SimulAnswer {
     id String @id @default(cuid())
 
     fileUploadLink String?
+    fileUploadLink2 String?
 
     simulAttempt   SimulAttempt? @relation(fields: [simulAttemptId], references: [id])
     simulAttemptId String?

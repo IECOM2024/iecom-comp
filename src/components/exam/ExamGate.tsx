@@ -88,8 +88,6 @@ export const ExamGate = ({ examId, setTitle }: ExamGateProps) => {
     return <SimulExam examId={examId} />;
   }
 
-  console.log(examInfo)
-
   if (examInfoQuery.isLoading) {
     return <Loading />;
   }

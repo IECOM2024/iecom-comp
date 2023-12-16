@@ -29,7 +29,7 @@ export const DasboardPageComponent = () => {
       >
         DASHBOARD
       </Text>
-      <Flex flexWrap="wrap" p="2em">
+      <Flex flexWrap="wrap" p="2em" gap="2em">
         {examList.map((exam, i) => (
           <DasboardItem exam={exam} key={i} />
         ))}
